@@ -206,13 +206,14 @@ body {
     color: var(--color-text);
     transition: all 0.25s ease;
 }
-
-.input-group input[type="text"],
-.input-group input[type="number"],
+.input-group input,
 .input-group textarea,
 .input-group select {
     -webkit-appearance: none;
     appearance: none;
+}
+
+.input-group select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
@@ -284,13 +285,12 @@ body {
     grid-column: 1 / -1;
 }
 
-/* Fix iOS date picker minimum height and layout */
+/* Fix iOS date picker layout */
 .input-group input[type="date"] {
-    min-height: 52px;
     position: relative;
-    max-width: 100%;
     box-sizing: border-box;
     display: block;
+    width: 100%;
 }
 
 .input-group input:focus,
