@@ -354,79 +354,95 @@
         showView('form-view');
     });
 
-    // ── Print / Download PDF (html2pdf for strict 9:16) ──
-    btnPrint.addEventListener('click', async () => {
-        const reportPaper = document.querySelector('.report-paper');
-        const actionsBar = document.querySelector('.report-actions');
+    // ── Generate & Share PDF (html2pdf – strict 9:16 for iOS) ──
+    btnPrint.addEventListener('click', function () {
+        var reportPaper = document.querySelector('.report-paper');
+        var actionsBar = document.querySelector('.report-actions');
 
-        // Temporarily hide Edit / Download buttons
+        // Hide action buttons so they don't appear in the PDF
         if (actionsBar) actionsBar.style.display = 'none';
 
-        // Build a filename from the farm name + date
-        const farmEl = document.getElementById('out-farm');
-        const dateEl = document.getElementById('out-date');
-        const farmName = (farmEl && farmEl.textContent) ? farmEl.textContent.trim().replace(/\s+/g, '_') : 'Informe';
-        const dateStr = (dateEl && dateEl.textContent) ? dateEl.textContent.trim().replace(/\s+/g, '_') : '';
-        const fileName = `Castalia_${farmName}_${dateStr}.pdf`;
+        // Build filename
+        var farmEl = document.getElementById('out-farm');
+        var dateEl = document.getElementById('out-date');
+        var farmName = (farmEl && farmEl.textContent) ? farmEl.textContent.trim().replace(/\s+/g, '_') : 'Informe';
+        var dateStr = (dateEl && dateEl.textContent) ? dateEl.textContent.trim().replace(/\s+/g, '_') : '';
+        var fileName = 'Castalia_' + farmName + '_' + dateStr + '.pdf';
 
         // Loading state
         btnPrint.textContent = 'Generando PDF...';
         btnPrint.disabled = true;
 
-        try {
-            const opt = {
-                margin:       [8, 6, 8, 6], // mm: top, left, bottom, right
-                filename:     fileName,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: [144, 256], orientation: 'portrait' },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-            };
+        // Scroll to top to avoid offset issues with html2canvas
+        window.scrollTo(0, 0);
 
-            // Generate PDF blob using the correct API chain
-            const worker = html2pdf().set(opt).from(reportPaper);
-            const pdfBlob = await worker.toPdf().output('blob');
+        var opt = {
+            margin:       [6, 5, 6, 5],
+            filename:     fileName,
+            image:        { type: 'jpeg', quality: 0.95 },
+            html2canvas:  {
+                scale: 1.5,
+                useCORS: true,
+                logging: false,
+                scrollY: 0,
+                scrollX: 0,
+                windowWidth: reportPaper.scrollWidth
+            },
+            jsPDF:        { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true },
+            pagebreak:    { mode: ['css', 'legacy'] }
+        };
 
-            // Try native share (iOS, modern Android)
-            if (navigator.canShare) {
-                const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: 'Informe Técnico Castalia',
-                        files: [file]
-                    });
-                    return; // Share successful, done
+        // Use the simplest, most compatible html2pdf chain
+        html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function (pdf) {
+            // We have the jsPDF instance; get blob synchronously
+            var pdfBlob = pdf.output('blob');
+
+            // Attempt native share (works on iOS Safari 15+)
+            if (navigator.share && navigator.canShare) {
+                try {
+                    var file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                    if (navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            title: 'Informe Técnico Castalia',
+                            files: [file]
+                        }).catch(function () {
+                            // User cancelled or share failed – do nothing
+                        }).finally(function () {
+                            restoreButton();
+                        });
+                        return; // Exit here, finally in share handles restore
+                    }
+                } catch (e) {
+                    // canShare threw – fall through to download
                 }
             }
 
-            // Fallback: direct download
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement('a');
+            // Fallback: trigger download via anchor
+            var url = URL.createObjectURL(pdfBlob);
+            var a = document.createElement('a');
             a.href = url;
             a.download = fileName;
+            a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 5000);
+            setTimeout(function () {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 3000);
 
-        } catch (err) {
-            console.error('PDF generation error:', err);
-            // If share was cancelled by user, that's ok
-            if (err.name !== 'AbortError') {
-                // Last resort: try simple save
-                try {
-                    await html2pdf().set({
-                        filename: fileName,
-                        image: { type: 'jpeg', quality: 0.95 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'mm', format: [144, 256], orientation: 'portrait' }
-                    }).from(reportPaper).save();
-                } catch (e2) {
-                    alert('Error generando el PDF. Intente de nuevo.');
-                }
-            }
-        } finally {
-            // Restore buttons
+            restoreButton();
+        }).catch(function (err) {
+            console.error('PDF generation failed:', err);
+            // Absolute last resort: try direct .save()
+            html2pdf().set(opt).from(reportPaper).save().then(function () {
+                restoreButton();
+            }).catch(function () {
+                alert('No se pudo generar el PDF. Intente cerrar otras apps y reintentar.');
+                restoreButton();
+            });
+        });
+
+        function restoreButton() {
             if (actionsBar) actionsBar.style.display = '';
             btnPrint.textContent = 'Descargar PDF';
             btnPrint.disabled = false;
