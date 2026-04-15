@@ -255,7 +255,7 @@
                     <div class="lake-title-group">
                         <h3>Est. ${i + 1}: ${escapeHTML(lake.name)}</h3>
                         <div class="lake-subtitle">
-                            Día ${daysInCulture} <span class="divider">|</span> ${escapeHTML(lake.area)} m² <span class="divider">|</span> Siembra: ${lake.stockingDate !== '—' ? formatDate(lake.stockingDate) : '—'} <span class="divider">|</span> Peso Inicial: ${escapeHTML(lake.initialWeight)}${lake.initialWeight !== '—' ? 'g' : ''}
+                            <span>Día ${daysInCulture}</span> <span class="divider">|</span> <span>${escapeHTML(lake.area)} m²</span> <span class="divider">|</span> <span>Siembra: ${lake.stockingDate !== '—' ? formatDate(lake.stockingDate) : '—'}</span> <span class="divider">|</span> <span>Peso Inicial: ${escapeHTML(lake.initialWeight)}${lake.initialWeight !== '—' ? 'g' : ''}</span>
                         </div>
                     </div>
                 </div>
