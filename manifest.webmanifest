@@ -1,6 +1,6 @@
 {
-    "name": "Castalia Field Report",
-    "short_name": "Field Report",
+    "name": "Castalia STC",
+    "short_name": "Castalia STC",
     "description": "Offline-first PWA for generating technical field reports.",
     "start_url": "./index.html",
     "display": "standalone",
