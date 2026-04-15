@@ -378,8 +378,8 @@
         var opt = {
             margin:      [6, 5, 6, 5],
             filename:    fileName,
-            image:       { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            image:       { type: 'png' },
+            html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
             jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true }
         };
 
