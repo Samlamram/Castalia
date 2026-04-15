@@ -354,12 +354,16 @@
         showView('form-view');
     });
 
-    // ── Generate & Share PDF (html2pdf – strict 9:16 for iOS) ──
+    // ── Generate PDF (html2pdf strict 9:16) with window.print fallback ──
     btnPrint.addEventListener('click', function () {
+        // Check if html2pdf is loaded
+        if (typeof html2pdf === 'undefined') {
+            window.print();
+            return;
+        }
+
         var reportPaper = document.querySelector('.report-paper');
         var actionsBar = document.querySelector('.report-actions');
-
-        // Hide action buttons so they don't appear in the PDF
         if (actionsBar) actionsBar.style.display = 'none';
 
         // Build filename
@@ -369,84 +373,29 @@
         var dateStr = (dateEl && dateEl.textContent) ? dateEl.textContent.trim().replace(/\s+/g, '_') : '';
         var fileName = 'Castalia_' + farmName + '_' + dateStr + '.pdf';
 
-        // Loading state
-        btnPrint.textContent = 'Generando PDF...';
+        btnPrint.textContent = 'Generando...';
         btnPrint.disabled = true;
-
-        // Scroll to top to avoid offset issues with html2canvas
         window.scrollTo(0, 0);
 
-        var opt = {
-            margin:       [6, 5, 6, 5],
-            filename:     fileName,
-            image:        { type: 'jpeg', quality: 0.95 },
-            html2canvas:  {
-                scale: 1.5,
-                useCORS: true,
-                logging: false,
-                scrollY: 0,
-                scrollX: 0,
-                windowWidth: reportPaper.scrollWidth
-            },
-            jsPDF:        { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true },
-            pagebreak:    { mode: ['css', 'legacy'] }
-        };
-
-        // Use the simplest, most compatible html2pdf chain
-        html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function (pdf) {
-            // We have the jsPDF instance; get blob synchronously
-            var pdfBlob = pdf.output('blob');
-
-            // Attempt native share (works on iOS Safari 15+)
-            if (navigator.share && navigator.canShare) {
-                try {
-                    var file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-                    if (navigator.canShare({ files: [file] })) {
-                        navigator.share({
-                            title: 'Informe Técnico Castalia',
-                            files: [file]
-                        }).catch(function () {
-                            // User cancelled or share failed – do nothing
-                        }).finally(function () {
-                            restoreButton();
-                        });
-                        return; // Exit here, finally in share handles restore
-                    }
-                } catch (e) {
-                    // canShare threw – fall through to download
-                }
-            }
-
-            // Fallback: trigger download via anchor
-            var url = URL.createObjectURL(pdfBlob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(function () {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 3000);
-
-            restoreButton();
-        }).catch(function (err) {
-            console.error('PDF generation failed:', err);
-            // Absolute last resort: try direct .save()
-            html2pdf().set(opt).from(reportPaper).save().then(function () {
-                restoreButton();
-            }).catch(function () {
-                alert('No se pudo generar el PDF. Intente cerrar otras apps y reintentar.');
-                restoreButton();
-            });
-        });
-
-        function restoreButton() {
+        // Ultra-simple: one-liner save with minimal options
+        html2pdf().set({
+            margin:      [6, 5, 6, 5],
+            filename:    fileName,
+            image:       { type: 'jpeg', quality: 0.92 },
+            html2canvas: { scale: 1, useCORS: true, scrollY: 0 },
+            jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true }
+        }).from(reportPaper).save().then(function () {
             if (actionsBar) actionsBar.style.display = '';
             btnPrint.textContent = 'Descargar PDF';
             btnPrint.disabled = false;
-        }
+        }).catch(function (err) {
+            console.error('html2pdf failed:', err);
+            if (actionsBar) actionsBar.style.display = '';
+            btnPrint.textContent = 'Descargar PDF';
+            btnPrint.disabled = false;
+            // Fallback to native print
+            window.print();
+        });
     });
 
     // ── Service Worker Registration ──
