@@ -380,7 +380,8 @@
             filename:    fileName,
             image:       { type: 'png' },
             html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
-            jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true }
+            jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true },
+            pagebreak:   { avoid: ['.report-footer-print', '.footer-img', 'tfoot', '.lake-report-card', '.summary-card', '.keep-together', '.report-header-compact'] }
         };
 
         html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function (pdf) {
