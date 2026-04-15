@@ -2,7 +2,7 @@
    Service Worker – Cache-first for offline PWA
    =========================== */
 
-const CACHE_NAME = 'castalia-report-v36';
+const CACHE_NAME = 'castalia-report-v37';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

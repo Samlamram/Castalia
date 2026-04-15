@@ -288,7 +288,9 @@ body {
 .input-group input[type="date"] {
     min-height: 52px;
     position: relative;
-    padding-right: 14px;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: block;
 }
 
 .input-group input:focus,
@@ -320,9 +322,10 @@ body {
     grid-column: 1 / -1;
 }
 
-@media (max-width: 400px) {
-    .input-grid {
+@media (max-width: 600px) {
+    .input-grid, .advanced-grid {
         grid-template-columns: 1fr;
+        gap: 0;
     }
 }
 
