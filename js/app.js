@@ -354,9 +354,67 @@
         showView('form-view');
     });
 
-    // ── Print / Download PDF ──
-    btnPrint.addEventListener('click', () => {
-        window.print();
+    // ── Print / Download PDF (html2pdf for strict 9:16) ──
+    btnPrint.addEventListener('click', async () => {
+        const reportPaper = document.querySelector('.report-paper');
+        const actionsBar = document.querySelector('.report-actions');
+
+        // Temporarily hide Edit / Download buttons
+        if (actionsBar) actionsBar.style.display = 'none';
+
+        // Build a filename from the farm name + date
+        const farmEl = document.getElementById('out-farm');
+        const dateEl = document.getElementById('out-date');
+        const farmName = (farmEl && farmEl.textContent) ? farmEl.textContent.trim().replace(/\s+/g, '_') : 'Informe';
+        const dateStr = (dateEl && dateEl.textContent) ? dateEl.textContent.trim().replace(/\s+/g, '_') : '';
+        const fileName = `Castalia_${farmName}_${dateStr}.pdf`;
+
+        // Loading state
+        btnPrint.textContent = 'Generando PDF...';
+        btnPrint.disabled = true;
+
+        try {
+            const opt = {
+                margin:       [8, 6, 8, 6], // mm: top, left, bottom, right
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: [144, 256], orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            const blob = await html2pdf().set(opt).from(reportPaper).outputPdf('blob');
+            const file = new File([blob], fileName, { type: 'application/pdf' });
+
+            // Try native share first (iOS, modern Android)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: 'Informe Técnico Castalia',
+                    files: [file]
+                });
+            } else {
+                // Fallback: direct download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        } catch (err) {
+            console.error('PDF generation error:', err);
+            // If share was cancelled by user, that's fine
+            if (err.name !== 'AbortError') {
+                alert('Error generando el PDF. Intente de nuevo.');
+            }
+        } finally {
+            // Restore buttons
+            if (actionsBar) actionsBar.style.display = '';
+            btnPrint.textContent = 'Descargar PDF';
+            btnPrint.disabled = false;
+        }
     });
 
     // ── Service Worker Registration ──

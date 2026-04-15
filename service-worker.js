@@ -2,11 +2,11 @@
    Service Worker – Cache-first for offline PWA
    =========================== */
 
-const CACHE_NAME = 'castalia-report-v43';
+const CACHE_NAME = 'castalia-report-v44';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './css/style.css?v=42',
+    './css/style.css?v=44',
     './js/app.js',
     './manifest.webmanifest',
     './assets/logo.png',
@@ -14,6 +14,7 @@ const ASSETS_TO_CACHE = [
     './assets/footer.png',
     './assets/icon-192.png',
     './assets/icon-512.png',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
 ];
 
 // Install – precache all app shell assets
