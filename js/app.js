@@ -378,36 +378,52 @@
                 margin:       [8, 6, 8, 6], // mm: top, left, bottom, right
                 filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'mm', format: [144, 256], orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            const blob = await html2pdf().set(opt).from(reportPaper).outputPdf('blob');
-            const file = new File([blob], fileName, { type: 'application/pdf' });
+            // Generate PDF blob using the correct API chain
+            const worker = html2pdf().set(opt).from(reportPaper);
+            const pdfBlob = await worker.toPdf().output('blob');
 
-            // Try native share first (iOS, modern Android)
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'Informe Técnico Castalia',
-                    files: [file]
-                });
-            } else {
-                // Fallback: direct download
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+            // Try native share (iOS, modern Android)
+            if (navigator.canShare) {
+                const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Informe Técnico Castalia',
+                        files: [file]
+                    });
+                    return; // Share successful, done
+                }
             }
+
+            // Fallback: direct download
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+
         } catch (err) {
             console.error('PDF generation error:', err);
-            // If share was cancelled by user, that's fine
+            // If share was cancelled by user, that's ok
             if (err.name !== 'AbortError') {
-                alert('Error generando el PDF. Intente de nuevo.');
+                // Last resort: try simple save
+                try {
+                    await html2pdf().set({
+                        filename: fileName,
+                        image: { type: 'jpeg', quality: 0.95 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: [144, 256], orientation: 'portrait' }
+                    }).from(reportPaper).save();
+                } catch (e2) {
+                    alert('Error generando el PDF. Intente de nuevo.');
+                }
             }
         } finally {
             // Restore buttons
