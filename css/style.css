@@ -856,9 +856,9 @@ body {
     }
 
     .container {
-        max-width: 100%;
+        max-width: 144mm; /* Simulates 9:16 mobile receipt on A4 */
         padding: 0;
-        margin: 0;
+        margin: 0 auto;
         background: transparent;
     }
 
