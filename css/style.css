@@ -653,6 +653,8 @@ body {
 
 .report-footer-print {
     margin-top: 20px;
+    break-inside: avoid;
+    page-break-inside: avoid;
 }
 
 .lake-card-header {

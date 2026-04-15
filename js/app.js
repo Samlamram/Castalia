@@ -354,9 +354,8 @@
         showView('form-view');
     });
 
-    // ── Generate PDF (html2pdf strict 9:16) with window.print fallback ──
+    // ── Generate PDF (html2pdf strict 9:16) + native share ──
     btnPrint.addEventListener('click', function () {
-        // Check if html2pdf is loaded
         if (typeof html2pdf === 'undefined') {
             window.print();
             return;
@@ -366,7 +365,6 @@
         var actionsBar = document.querySelector('.report-actions');
         if (actionsBar) actionsBar.style.display = 'none';
 
-        // Build filename
         var farmEl = document.getElementById('out-farm');
         var dateEl = document.getElementById('out-date');
         var farmName = (farmEl && farmEl.textContent) ? farmEl.textContent.trim().replace(/\s+/g, '_') : 'Informe';
@@ -377,25 +375,51 @@
         btnPrint.disabled = true;
         window.scrollTo(0, 0);
 
-        // Ultra-simple: one-liner save with minimal options
-        html2pdf().set({
+        var opt = {
             margin:      [6, 5, 6, 5],
             filename:    fileName,
-            image:       { type: 'jpeg', quality: 0.92 },
-            html2canvas: { scale: 1, useCORS: true, scrollY: 0 },
+            image:       { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true }
-        }).from(reportPaper).save().then(function () {
-            if (actionsBar) actionsBar.style.display = '';
-            btnPrint.textContent = 'Descargar PDF';
-            btnPrint.disabled = false;
+        };
+
+        html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function (pdf) {
+            var pdfBlob = pdf.output('blob');
+
+            // Try native share on iOS/Android
+            if (navigator.share && navigator.canShare) {
+                try {
+                    var file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                    if (navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            title: 'Informe Técnico Castalia',
+                            files: [file]
+                        }).catch(function () {
+                            // User cancelled share – that's fine
+                        }).finally(function () {
+                            restore();
+                        });
+                        return;
+                    }
+                } catch (e) {
+                    // canShare not supported, fall through
+                }
+            }
+
+            // Fallback: direct download
+            pdf.save(fileName);
+            restore();
         }).catch(function (err) {
-            console.error('html2pdf failed:', err);
-            if (actionsBar) actionsBar.style.display = '';
-            btnPrint.textContent = 'Descargar PDF';
-            btnPrint.disabled = false;
-            // Fallback to native print
+            console.error('PDF error:', err);
+            restore();
             window.print();
         });
+
+        function restore() {
+            if (actionsBar) actionsBar.style.display = '';
+            btnPrint.textContent = 'Descargar PDF';
+            btnPrint.disabled = false;
+        }
     });
 
     // ── Service Worker Registration ──
