@@ -354,7 +354,7 @@
         showView('form-view');
     });
 
-    // ── PDF Generation with Repeating Branding (9:16) ──
+    // ── Generate PDF (html2pdf strict 9:16) + native share ──
     btnPrint.addEventListener('click', function () {
         if (typeof html2pdf === 'undefined') {
             window.print();
@@ -375,103 +375,51 @@
         btnPrint.disabled = true;
         window.scrollTo(0, 0);
 
-        // Pre-load branding assets as Base64 helper
-        function getBase64Image(url) {
-            return new Promise(function(resolve, reject) {
-                var img = new Image();
-                img.setAttribute('crossOrigin', 'anonymous');
-                img.onload = function() {
-                    var canvas = document.createElement('canvas');
-                    canvas.width = this.width;
-                    canvas.height = this.height;
-                    var ctx = canvas.getContext('2d');
-                    ctx.drawImage(this, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.onerror = reject;
-                img.src = url;
-            });
-        }
+        var opt = {
+            margin:      [6, 5, 6, 5],
+            filename:    fileName,
+            image:       { type: 'png' },
+            html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
+            jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true },
+            pagebreak:   { avoid: ['.report-footer-print', '.footer-img', 'tfoot', '.lake-report-card', '.summary-card', '.keep-together', '.report-header-compact'] }
+        };
 
-        // Process PDF
-        Promise.all([
-            getBase64Image('./assets/header.png'),
-            getBase64Image('./assets/footer.png')
-        ]).then(function(images) {
-            var headerBase64 = images[0];
-            var footerBase64 = images[1];
+        html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function (pdf) {
+            var pdfBlob = pdf.output('blob');
 
-            var opt = {
-                margin:      [25, 6, 20, 6], // [Top, Left, Bottom, Right] in mm
-                filename:    fileName,
-                image:       { type: 'png' },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    scrollY: 0,
-                    windowWidth: reportPaper.scrollWidth
-                },
-                jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true },
-                pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
-            };
-
-            // Generate and Post-Process
-            html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function(pdf) {
-                var totalPages = pdf.internal.getNumberOfPages();
-                
-                for (var i = 1; i <= totalPages; i++) {
-                    pdf.setPage(i);
-                    
-                    // Inject Header (25mm high)
-                    // pdf.addImage(data, format, x, y, width, height)
-                    pdf.addImage(headerBase64, 'PNG', 0, 0, 144, 25);
-                    
-                    // Inject Footer (20mm high) at the bottom (256mm - 20mm = 236mm)
-                    pdf.addImage(footerBase64, 'PNG', 0, 236, 144, 20);
-                }
-
-                return pdf.output('blob');
-            }).then(function(pdfBlob) {
-                // Share native
-                if (navigator.share && navigator.canShare) {
+            // Try native share on iOS/Android
+            if (navigator.share && navigator.canShare) {
+                try {
                     var file = new File([pdfBlob], fileName, { type: 'application/pdf' });
                     if (navigator.canShare({ files: [file] })) {
-                        return navigator.share({
+                        navigator.share({
                             title: 'Informe Técnico Castalia',
                             files: [file]
+                        }).catch(function () {
+                            // User cancelled share – that's fine
+                        }).finally(function () {
+                            restore();
                         });
+                        return;
                     }
+                } catch (e) {
+                    // canShare not supported, fall through
                 }
-                // Fallback to direct save
-                saveAs(pdfBlob, fileName);
-            }).catch(function(err) {
-                console.error('PDF Flow Error:', err);
-            }).finally(function() {
-                if (actionsBar) actionsBar.style.display = '';
-                btnPrint.textContent = 'Descargar PDF';
-                btnPrint.disabled = false;
-            });
+            }
 
-        }).catch(function(err) {
-            console.error('Asset pre-load failed:', err);
+            // Fallback: direct download
+            pdf.save(fileName);
+            restore();
+        }).catch(function (err) {
+            console.error('PDF error:', err);
+            restore();
             window.print();
+        });
+
+        function restore() {
             if (actionsBar) actionsBar.style.display = '';
             btnPrint.textContent = 'Descargar PDF';
             btnPrint.disabled = false;
-        });
-
-        // Simple helper for blob save if share fails
-        function saveAs(blob, name) {
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = name;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(function() {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 2000);
         }
     });
 
