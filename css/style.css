@@ -841,6 +841,11 @@ body {
    PRINT STYLES
    =========================== */
 @media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
     /* Hide non-print elements */
     .no-print,
     .sticky-bottom,
@@ -858,7 +863,8 @@ body {
     }
 
     .container {
-        max-width: 144mm; /* Simulates 9:16 mobile receipt on A4 */
+        width: 100%;
+        max-width: 190mm;
         padding: 0;
         margin: 0 auto;
         background: transparent;

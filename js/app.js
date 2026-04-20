@@ -354,73 +354,17 @@
         showView('form-view');
     });
 
-    // ── Generate PDF (html2pdf strict 9:16) + native share ──
+    // ── Print / Save as PDF (native browser dialog, A4 styles) ──
     btnPrint.addEventListener('click', function () {
-        if (typeof html2pdf === 'undefined') {
-            window.print();
-            return;
-        }
-
-        var reportPaper = document.querySelector('.report-paper');
         var actionsBar = document.querySelector('.report-actions');
         if (actionsBar) actionsBar.style.display = 'none';
-
-        var farmEl = document.getElementById('out-farm');
-        var dateEl = document.getElementById('out-date');
-        var farmName = (farmEl && farmEl.textContent) ? farmEl.textContent.trim().replace(/\s+/g, '_') : 'Informe';
-        var dateStr = (dateEl && dateEl.textContent) ? dateEl.textContent.trim().replace(/\s+/g, '_') : '';
-        var fileName = 'Castalia_' + farmName + '_' + dateStr + '.pdf';
-
-        btnPrint.textContent = 'Generando...';
+        btnPrint.textContent = 'Abriendo...';
         btnPrint.disabled = true;
         window.scrollTo(0, 0);
-
-        var opt = {
-            margin:      [6, 5, 6, 5],
-            filename:    fileName,
-            image:       { type: 'png' },
-            html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
-            jsPDF:       { unit: 'mm', format: [144, 256], orientation: 'portrait', compress: true },
-            pagebreak:   { avoid: ['.report-footer-print', '.footer-img', 'tfoot', '.lake-report-card', '.summary-card', '.keep-together', '.report-header-compact'] }
-        };
-
-        html2pdf().set(opt).from(reportPaper).toPdf().get('pdf').then(function (pdf) {
-            var pdfBlob = pdf.output('blob');
-
-            // Try native share on iOS/Android
-            if (navigator.share && navigator.canShare) {
-                try {
-                    var file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-                    if (navigator.canShare({ files: [file] })) {
-                        navigator.share({
-                            title: 'Informe Técnico Castalia',
-                            files: [file]
-                        }).catch(function () {
-                            // User cancelled share – that's fine
-                        }).finally(function () {
-                            restore();
-                        });
-                        return;
-                    }
-                } catch (e) {
-                    // canShare not supported, fall through
-                }
-            }
-
-            // Fallback: direct download
-            pdf.save(fileName);
-            restore();
-        }).catch(function (err) {
-            console.error('PDF error:', err);
-            restore();
-            window.print();
-        });
-
-        function restore() {
-            if (actionsBar) actionsBar.style.display = '';
-            btnPrint.textContent = 'Descargar PDF';
-            btnPrint.disabled = false;
-        }
+        window.print();
+        if (actionsBar) actionsBar.style.display = '';
+        btnPrint.textContent = 'Descargar PDF';
+        btnPrint.disabled = false;
     });
 
     // ── Service Worker Registration ──
