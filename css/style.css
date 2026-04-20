@@ -22,6 +22,7 @@
     --shadow-strong: 0 8px 24px rgba(23, 42, 70, 0.25);
     
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-handwritten: 'Caveat', 'Segoe Print', 'Bradley Hand ITC', cursive;
     --nav-height: 64px;
 }
 
@@ -353,7 +354,7 @@ body {
 }
 
 .btn-add-inline {
-    flex-shrink: 0;
+    width: 100%;
     padding: 10px 14px;
     border-radius: var(--radius-md);
     font-size: 0.9rem;
@@ -361,12 +362,7 @@ body {
 
 @media (max-width: 600px) {
     .optional-section-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .btn-add-inline {
-        width: 100%;
+        align-items: center;
     }
 }
 
@@ -695,7 +691,9 @@ body.report-preview-active .container {
 }
 
 .info-grid-compact .data-value {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-handwritten);
+    font-size: 1.05rem;
+    font-weight: 600;
     color: var(--color-primary);
     flex: 1;
 }
@@ -1015,9 +1013,11 @@ body.report-preview-active .container {
 /* Text blocks (recommendations, actions, observations) */
 .text-block,
 .lake-report-card .observations p {
-    font-size: 0.85rem;
+    font-family: var(--font-handwritten);
+    font-size: 1.25rem;
+    font-weight: 600;
     white-space: pre-wrap;
-    line-height: 1.6;
+    line-height: 1.25;
     color: var(--color-text);
     text-align: justify;
     margin: 4px 0 0 0;
@@ -1113,9 +1113,11 @@ body.report-preview-active .container {
     .text-block,
     .lake-report-card .observations p,
     .observations p {
-        font-size: 8.5pt !important;
+        font-family: var(--font-handwritten) !important;
+        font-size: 13pt !important;
+        font-weight: 600 !important;
         text-align: justify !important;
-        line-height: 1.4 !important;
+        line-height: 1.15 !important;
         white-space: pre-wrap !important;
         margin: 4px 0 0 0 !important;
     }
