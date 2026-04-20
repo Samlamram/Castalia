@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Castalia STC">
     <link rel="apple-touch-icon" href="./assets/logo.png">
     <!-- Styles -->
-    <link rel="stylesheet" href="./css/style.css?v=59">
+    <link rel="stylesheet" href="./css/style.css?v=61">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -74,13 +74,24 @@
                     </div>
                 </section>
 
-                <!-- Section B: Estanques -->
-                <section class="card">
-                    <h3>B. Estanques</h3>
-                    <div id="lakes-container">
-                        <!-- Lake blocks will be injected here -->
+                <!-- Section B: Estanques (Opcional) -->
+                <section class="card optional-section" id="section-lakes">
+                    <div class="optional-section-header">
+                        <h3>B. Estanques <span class="optional-badge">Opcional</span></h3>
+                        <label class="optional-toggle">
+                            <input type="checkbox" id="include-lakes">
+                            <span>Incluir</span>
+                        </label>
                     </div>
-                    <button type="button" id="btn-add-lake" class="btn btn-outline">+ Agregar Estanque</button>
+                    <details id="lakes-details" class="optional-details">
+                        <summary>Configurar estanques</summary>
+                        <div class="optional-details-body">
+                            <div id="lakes-container">
+                                <!-- Lake blocks will be injected here -->
+                            </div>
+                            <button type="button" id="btn-add-lake" class="btn btn-outline">+ Agregar Estanque</button>
+                        </div>
+                    </details>
                 </section>
 
                 <!-- Section C: Recomendaciones Generales -->
@@ -120,13 +131,13 @@
                                     <div class="report-header-info">
                                         <h1 class="report-title-compact">INFORME TÉCNICO DE CAMPO</h1>
                                         
-                                        <div class="info-grid-compact">
-                                            <div class="info-item"><span class="label">FECHA:</span> <span id="out-date" class="data-value"></span></div>
-                                            <div class="info-item"><span class="label">GRANJA:</span> <span id="out-farm" class="data-value"></span></div>
-                                            <div class="info-item"><span class="label">MUNICIPIO:</span> <span id="out-municipality" class="data-value"></span></div>
-                                            <div class="info-item"><span class="label">PROPIETARIO:</span> <span id="out-owner" class="data-value"></span></div>
-                                            <div class="info-item"><span class="label">ATENDIDO POR:</span> <span id="out-attendedBy" class="data-value"></span></div>
-                                            <div class="info-item"><span class="label">TÉCNICOS:</span> <span id="out-technician" class="data-value"></span></div>
+                                        <div id="report-info-grid" class="info-grid-compact">
+                                            <div id="item-date" class="info-item"><span class="label">FECHA:</span> <span id="out-date" class="data-value"></span></div>
+                                            <div id="item-farm" class="info-item"><span class="label">GRANJA:</span> <span id="out-farm" class="data-value"></span></div>
+                                            <div id="item-municipality" class="info-item"><span class="label">MUNICIPIO:</span> <span id="out-municipality" class="data-value"></span></div>
+                                            <div id="item-owner" class="info-item"><span class="label">PROPIETARIO:</span> <span id="out-owner" class="data-value"></span></div>
+                                            <div id="item-attendedBy" class="info-item"><span class="label">ATENDIDO POR:</span> <span id="out-attendedBy" class="data-value"></span></div>
+                                            <div id="item-technician" class="info-item"><span class="label">TÉCNICOS:</span> <span id="out-technician" class="data-value"></span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -137,19 +148,19 @@
                         <tr>
                             <td>
                                 <div class="report-content">
-                                    <div class="report-section">
+                                    <div id="section-lakes-report" class="report-section">
                                         <h2 class="section-title">Resumen de Estanques</h2>
                                         <div id="out-lakes">
                                             <!-- Lake cards will be injected here -->
                                         </div>
                                     </div>
 
-                                    <div class="report-section keep-together summary-card">
+                                    <div id="section-recommendations-report" class="report-section keep-together summary-card">
                                         <h2 class="section-title">Recomendaciones Generales</h2>
                                         <p id="out-recommendations" class="text-block"></p>
                                     </div>
 
-                                    <div class="report-section keep-together summary-card">
+                                    <div id="section-actions-report" class="report-section keep-together summary-card">
                                         <h2 class="section-title">Acciones a Realizar</h2>
                                         <p id="out-actions" class="text-block"></p>
                                     </div>
@@ -243,6 +254,6 @@
     </template>
 
     <!-- Scripts -->
-    <script src="./js/app.js?v=59"></script>
+    <script src="./js/app.js?v=61"></script>
 </body>
 </html>

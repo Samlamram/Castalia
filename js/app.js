@@ -11,9 +11,15 @@
     const reportView = document.getElementById('report-view');
     const reportForm = document.getElementById('report-form');
     const lakesContainer = document.getElementById('lakes-container');
+    const includeLakesInput = document.getElementById('include-lakes');
+    const lakesDetails = document.getElementById('lakes-details');
     const btnAddLake = document.getElementById('btn-add-lake');
     const btnBack = document.getElementById('btn-back');
     const btnPrint = document.getElementById('btn-print');
+    const reportInfoGrid = document.getElementById('report-info-grid');
+    const sectionLakesReport = document.getElementById('section-lakes-report');
+    const sectionRecommendationsReport = document.getElementById('section-recommendations-report');
+    const sectionActionsReport = document.getElementById('section-actions-report');
 
     // ── Auto-fill Today's Date ──
     const dateInput = document.getElementById('date');
@@ -54,6 +60,10 @@
         const block = clone.querySelector('.lake-block');
         block.dataset.index = lakeCount;
         block.querySelector('.lake-index').textContent = lakeCount;
+        const lakeNameInput = block.querySelector('[name="lakeName[]"]');
+        if (lakeNameInput) {
+            lakeNameInput.required = !!includeLakesInput.checked;
+        }
 
         // Remove button
         block.querySelector('.btn-remove').addEventListener('click', () => {
@@ -73,28 +83,63 @@
         lakeCount = blocks.length;
     }
 
-    btnAddLake.addEventListener('click', addLakeBlock);
+    function hasValue(value) {
+        return String(value || '').trim().length > 0;
+    }
 
-    // Add one lake block by default
-    addLakeBlock();
+    function setLakeInputsState(enabled) {
+        lakesContainer.querySelectorAll('input, textarea, select').forEach((el) => {
+            if (el.name === 'lakeName[]') {
+                el.required = enabled;
+            }
+            el.disabled = !enabled;
+        });
+        btnAddLake.disabled = !enabled;
+    }
+
+    function toggleLakeSection(enabled) {
+        if (!enabled) {
+            lakesContainer.innerHTML = '';
+            lakeCount = 0;
+        } else if (lakesContainer.querySelectorAll('.lake-block').length === 0) {
+            addLakeBlock();
+        }
+
+        lakesDetails.open = enabled;
+        lakesDetails.classList.toggle('section-disabled', !enabled);
+        setLakeInputsState(enabled);
+    }
+
+    btnAddLake.addEventListener('click', addLakeBlock);
+    includeLakesInput.addEventListener('change', (e) => {
+        toggleLakeSection(e.target.checked);
+    });
+
+    toggleLakeSection(false);
 
     // ── Collect Lake Data ──
     function collectLakes() {
+        if (!includeLakesInput.checked) return [];
         const blocks = lakesContainer.querySelectorAll('.lake-block');
         const lakes = [];
         blocks.forEach((block) => {
+            const lakeData = {
+                name: block.querySelector('[name="lakeName[]"]').value.trim(),
+                area: block.querySelector('[name="lakeArea[]"]').value.trim(),
+                stockingDate: block.querySelector('[name="lakeStockingDate[]"]').value,
+                fishQuantity: block.querySelector('[name="lakeFishQuantity[]"]').value.trim(),
+                initialWeight: block.querySelector('[name="lakeInitialWeight[]"]').value.trim(),
+                sampleWeight: block.querySelector('[name="lakeSampleWeight[]"]').value.trim(),
+                consumption: block.querySelector('[name="lakeConsumption[]"]').value.trim(),
+                prevDate: block.querySelector('[name="lakePrevDate[]"]').value,
+                prevWeight: block.querySelector('[name="lakePrevWeight[]"]').value.trim(),
+                prevConsumption: block.querySelector('[name="lakePrevConsumption[]"]').value.trim(),
+                observations: block.querySelector('[name="lakeObservations[]"]').value.trim(),
+            };
+            const hasAnyLakeValue = Object.values(lakeData).some(hasValue);
+            if (!hasAnyLakeValue) return;
             lakes.push({
-                name: block.querySelector('[name="lakeName[]"]').value || '—',
-                area: block.querySelector('[name="lakeArea[]"]').value || '—',
-                stockingDate: block.querySelector('[name="lakeStockingDate[]"]').value || '—',
-                fishQuantity: block.querySelector('[name="lakeFishQuantity[]"]').value || '—',
-                initialWeight: block.querySelector('[name="lakeInitialWeight[]"]').value || '—',
-                sampleWeight: block.querySelector('[name="lakeSampleWeight[]"]').value || '—',
-                consumption: block.querySelector('[name="lakeConsumption[]"]').value || '—',
-                prevDate: block.querySelector('[name="lakePrevDate[]"]').value || '',
-                prevWeight: block.querySelector('[name="lakePrevWeight[]"]').value || '',
-                prevConsumption: block.querySelector('[name="lakePrevConsumption[]"]').value || '',
-                observations: block.querySelector('[name="lakeObservations[]"]').value || '—',
+                ...lakeData,
             });
         });
         return lakes;
@@ -102,29 +147,46 @@
 
     // ── Format date nicely ──
     function formatDate(dateStr) {
-        if (!dateStr) return '—';
+        if (!dateStr) return '';
         const d = new Date(dateStr + 'T00:00:00');
         return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
+    function toggleSection(section, show) {
+        section.classList.toggle('hidden-section', !show);
+    }
+
+    function renderInfoItem(itemId, outId, value) {
+        const item = document.getElementById(itemId);
+        const out = document.getElementById(outId);
+        if (!item || !out) return false;
+        const visible = hasValue(value);
+        out.textContent = visible ? value : '';
+        item.classList.toggle('hidden-section', !visible);
+        return visible;
+    }
+
     // ── Render Report ──
     function renderReport(data) {
-        // General info
-        document.getElementById('out-date').textContent = formatDate(data.date);
-        document.getElementById('out-municipality').textContent = data.municipality || '—';
-        document.getElementById('out-farm').textContent = data.farm || '—';
-        document.getElementById('out-owner').textContent = data.owner || '—';
-        document.getElementById('out-attendedBy').textContent = data.attendedBy || '—';
-        document.getElementById('out-technician').textContent = data.technician || '—';
+        const visibleInfoItems = [
+            renderInfoItem('item-date', 'out-date', formatDate(data.date)),
+            renderInfoItem('item-municipality', 'out-municipality', data.municipality),
+            renderInfoItem('item-farm', 'out-farm', data.farm),
+            renderInfoItem('item-owner', 'out-owner', data.owner),
+            renderInfoItem('item-attendedBy', 'out-attendedBy', data.attendedBy),
+            renderInfoItem('item-technician', 'out-technician', data.technician),
+        ].filter(Boolean).length;
+        reportInfoGrid.classList.toggle('hidden-section', visibleInfoItems === 0);
 
         // Lakes
         const outLakes = document.getElementById('out-lakes');
         outLakes.innerHTML = '';
+        let renderedLakeCards = 0;
         data.lakes.forEach((lake, i) => {
             const card = document.createElement('div');
             // Calcular Métricas
-            let daysInCulture = '—';
-            if (lake.stockingDate !== '—' && data.date) {
+            let daysInCulture = '';
+            if (lake.stockingDate && data.date) {
                 const sDate = new Date(lake.stockingDate + 'T00:00:00');
                 const tDate = new Date(data.date + 'T00:00:00');
                 const diffTime = tDate - sDate;
@@ -134,7 +196,7 @@
                 }
             }
 
-            let weightGain = '—';
+            let weightGain = '';
             let gdpText = '';
             let periodDays = 0;
             let initialW = parseFloat(lake.initialWeight);
@@ -165,7 +227,7 @@
                 }
             }
 
-            let biomass = '—';
+            let biomass = '';
             let biomassGainText = '';
             let isBiomassPositive = false;
             let qty = parseInt(lake.fishQuantity);
@@ -194,8 +256,8 @@
                 }
             }
 
-            let fcaGlobalValue = '—';
-            let fcaPeriodValue = '—';
+            let fcaGlobalValue = '';
+            let fcaPeriodValue = '';
             let fcaGlobalEval = '';
             let fcaPeriodEval = '';
             
@@ -230,7 +292,7 @@
                     hasPeriodFCA = true;
                     
                     // Flechas y Colores contra el Global
-                    if (fcaGlobalValue !== '—') {
+                    if (fcaGlobalValue) {
                         let fcbG = parseFloat(fcaGlobalValue);
                         if (fcaP > fcbG) {
                             fcaPeriodArrow = '↑ '; // Aumentó el FCA (peor conversión)
@@ -247,68 +309,105 @@
                 }
             }
 
-            let fmtSampleWeight = isNaN(sampleW) ? '—' : sampleW + 'g';
+            let fmtSampleWeight = isNaN(sampleW) ? '' : sampleW + 'g';
+            const subtitleParts = [];
+            if (hasValue(daysInCulture)) subtitleParts.push(`Día ${daysInCulture}`);
+            if (hasValue(lake.area)) subtitleParts.push(`${escapeHTML(lake.area)} m²`);
+            if (hasValue(lake.stockingDate)) subtitleParts.push(`Siembra: ${formatDate(lake.stockingDate)}`);
+            if (hasValue(lake.initialWeight)) subtitleParts.push(`Peso Inicial: ${escapeHTML(lake.initialWeight)}g`);
 
-            card.className = 'lake-report-card';
-            card.innerHTML = `
-                <div class="lake-card-header">
-                    <div class="lake-title-group">
-                        <h3>Est. ${i + 1}: ${escapeHTML(lake.name)}</h3>
-                        <div class="lake-subtitle">
-                            <span>Día ${daysInCulture}</span> <span class="divider">|</span> <span>${escapeHTML(lake.area)} m²</span> <span class="divider">|</span> <span>Siembra: ${lake.stockingDate !== '—' ? formatDate(lake.stockingDate) : '—'}</span> <span class="divider">|</span> <span>Peso Inicial: ${escapeHTML(lake.initialWeight)}${lake.initialWeight !== '—' ? 'g' : ''}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="lake-analytics-row">
+            const metricCards = [];
+            if (fmtSampleWeight) {
+                metricCards.push(`
                     <div class="metric-box">
                         <span class="metric-label">PROMEDIO ACTUAL</span>
                         <span class="metric-value">${fmtSampleWeight}</span>
-                        <span class="metric-subtext ${isPositiveGain ? 'positive' : ''}">${weightGain !== '—' ? weightGain + gdpText : ''}</span>
+                        <span class="metric-subtext ${isPositiveGain ? 'positive' : ''}">${weightGain ? weightGain + gdpText : ''}</span>
                         ${periodDays > 0 ? `<span class="period-label">Últ. ${periodDays} días</span>` : ''}
                     </div>
+                `);
+            }
+            if (fcaGlobalValue) {
+                metricCards.push(`
                     <div class="metric-box">
                         <span class="metric-label">CONVERSIÓN (FCA)</span>
                         <span class="metric-value">${fcaGlobalValue}</span>
-                        <span class="metric-subtext ${hasPeriodFCA ? fcaDiffClass : (fcaGlobalValue !== '—' && parseFloat(fcaGlobalValue) < 1.5 ? 'positive' : '')}">${hasPeriodFCA ? fcaPeriodArrow + 'Per: ' + fcaPeriodValue + ' (' + fcaPeriodEval + ')' : fcaGlobalEval}</span>
+                        <span class="metric-subtext ${hasPeriodFCA ? fcaDiffClass : (parseFloat(fcaGlobalValue) < 1.5 ? 'positive' : '')}">${hasPeriodFCA ? fcaPeriodArrow + 'Per: ' + fcaPeriodValue + ' (' + fcaPeriodEval + ')' : fcaGlobalEval}</span>
                         ${periodDays > 0 ? `<span class="period-label">Últ. ${periodDays} días</span>` : ''}
                     </div>
+                `);
+            }
+            if (biomass) {
+                metricCards.push(`
                     <div class="metric-box">
                         <span class="metric-label">BIOMASA ESTIMADA</span>
                         <span class="metric-value">${biomass}</span>
                         <span class="metric-subtext ${isBiomassPositive ? 'positive' : ''}">${biomassGainText}</span>
                         ${periodDays > 0 && biomassGainText ? `<span class="period-label">Últ. ${periodDays} días</span>` : ''}
                     </div>
-                </div>
+                `);
+            }
 
-                <div class="lake-footer-bar">
+            const footerItems = [];
+            if (hasValue(lake.fishQuantity)) {
+                footerItems.push(`
                     <div class="footer-item">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                         Población: ${escapeHTML(lake.fishQuantity)}
                     </div>
-                    <div class="divider"></div>
+                `);
+            }
+            if (hasValue(lake.consumption)) {
+                footerItems.push(`
                     <div class="footer-item">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        Consumo: ${escapeHTML(lake.consumption)}${lake.consumption !== '—' ? ' kg' : ''}
+                        Consumo: ${escapeHTML(lake.consumption)} kg
                     </div>
-                    <div class="divider"></div>
-                    <div class="footer-item ${fcaGlobalValue !== '—' ? (parseFloat(fcaGlobalValue) <= 1.8 ? 'status-ok' : 'status-warn') : 'status-warn'}">
+                `);
+            }
+            if (fcaGlobalValue) {
+                const viableClass = parseFloat(fcaGlobalValue) <= 1.8 ? 'status-ok' : 'status-warn';
+                const viableText = parseFloat(fcaGlobalValue) <= 1.8 ? 'Lote Viable' : 'Lote No Viable';
+                footerItems.push(`
+                    <div class="footer-item ${viableClass}">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        ${fcaGlobalValue !== '—' ? (parseFloat(fcaGlobalValue) <= 1.8 ? 'Lote Viable' : 'Lote No Viable') : 'Evaluando Viabilidad'}
+                        ${viableText}
+                    </div>
+                `);
+            }
+
+            if (!hasValue(lake.name) && subtitleParts.length === 0 && metricCards.length === 0 && footerItems.length === 0 && !hasValue(lake.observations)) {
+                return;
+            }
+
+            card.className = 'lake-report-card';
+            card.innerHTML = `
+                <div class="lake-card-header">
+                    <div class="lake-title-group">
+                        <h3>Est. ${i + 1}${hasValue(lake.name) ? `: ${escapeHTML(lake.name)}` : ''}</h3>
+                        ${subtitleParts.length ? `<div class="lake-subtitle">${subtitleParts.map((part, idx) => `${idx > 0 ? '<span class="divider">|</span>' : ''}<span>${part}</span>`).join('')}</div>` : ''}
                     </div>
                 </div>
-
-                <div class="observations">
+                
+                ${metricCards.length ? `<div class="lake-analytics-row">${metricCards.join('')}</div>` : ''}
+                ${footerItems.length ? `<div class="lake-footer-bar">${footerItems.join('<div class="divider"></div>')}</div>` : ''}
+                ${hasValue(lake.observations) ? `<div class="observations">
                     <span class="label">Observaciones:</span>
                     <p>${escapeHTML(lake.observations)}</p>
-                </div>
+                </div>` : ''}
             `;
             outLakes.appendChild(card);
+            renderedLakeCards++;
         });
+        toggleSection(sectionLakesReport, renderedLakeCards > 0);
 
         // Recommendations & Actions
-        document.getElementById('out-recommendations').textContent = data.recommendations || '—';
-        document.getElementById('out-actions').textContent = data.actions || '—';
+        const recommendationsValue = (data.recommendations || '').trim();
+        const actionsValue = (data.actions || '').trim();
+        document.getElementById('out-recommendations').textContent = recommendationsValue;
+        document.getElementById('out-actions').textContent = actionsValue;
+        toggleSection(sectionRecommendationsReport, hasValue(recommendationsValue));
+        toggleSection(sectionActionsReport, hasValue(actionsValue));
     }
 
     function escapeHTML(str) {
@@ -324,7 +423,8 @@
 
         // Snapshot-style scale: compute once when report view opens.
         const availableWidth = Math.max(0, window.innerWidth - 16);
-        const paperWidth = reportPaper.offsetWidth || 1;
+        const letterPreviewWidthPx = (196 / 25.4) * 96; // 196mm rendered at 96dpi
+        const paperWidth = letterPreviewWidthPx;
         const scale = Math.min(1, availableWidth / paperWidth);
         reportView.style.setProperty('--report-preview-scale', scale.toFixed(4));
     }
@@ -340,7 +440,8 @@
         target.classList.add('active');
         document.body.classList.toggle('report-preview-active', viewId === 'report-view');
         if (viewId === 'report-view') {
-            updateReportPreviewScale();
+            // Wait for layout pass so scale snapshots correctly.
+            requestAnimationFrame(updateReportPreviewScale);
         }
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
@@ -357,8 +458,8 @@
             owner: document.getElementById('owner').value,
             attendedBy: document.getElementById('attendedBy').value,
             technician: document.getElementById('technician').value,
-            recommendations: document.getElementById('recommendations').value,
-            actions: document.getElementById('actions').value,
+            recommendations: document.getElementById('recommendations').value.trim(),
+            actions: document.getElementById('actions').value.trim(),
             lakes: collectLakes(),
         };
 
