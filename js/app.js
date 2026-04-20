@@ -326,6 +326,7 @@
         const target = document.getElementById(viewId);
         target.classList.remove('hidden');
         target.classList.add('active');
+        document.body.classList.toggle('report-preview-active', viewId === 'report-view');
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
 

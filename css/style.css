@@ -477,6 +477,12 @@ body {
     overflow-x: auto;
 }
 
+body.report-preview-active .container {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 #report-view .report-paper {
     width: 190mm;
     min-height: 277mm; /* A4 printable area with 10mm margins */
@@ -659,6 +665,12 @@ body {
 
 /* Keep report preview 1:1 even on small screens */
 @media screen and (max-width: 600px) {
+    body.report-preview-active .container {
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
     #report-view .report-header-compact {
         flex-direction: row;
         align-items: center;
