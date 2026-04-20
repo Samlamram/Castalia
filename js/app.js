@@ -223,7 +223,9 @@
                 if (bioRef !== null) {
                     let bioGain = bFinal - bioRef;
                     isBiomassPositive = bioGain >= 0;
-                    biomassGainText = `${bioGain >= 0 ? '↑' : '↓'} +${Math.abs(bioGain).toFixed(1)} kg`;
+                    const bioDirection = bioGain > 0 ? '↑' : bioGain < 0 ? '↓' : '→';
+                    const bioSign = bioGain > 0 ? '+' : bioGain < 0 ? '-' : '';
+                    biomassGainText = `${bioDirection} ${bioSign}${Math.abs(bioGain).toFixed(1)} kg`;
                 }
             }
 
@@ -231,6 +233,7 @@
             let fcaPeriodValue = '';
             let fcaGlobalEval = '';
             let fcaPeriodEval = '';
+            let fcaPeriodIssue = '';
             
             let cons = parseFloat(lake.consumption);
             let pCons = parseFloat(lake.prevConsumption);
@@ -257,7 +260,10 @@
                 let periodBioGain = bFinal - pBio;
                 let periodCons = cons - pCons;
 
-                if (periodBioGain > 0 && !isNaN(periodCons)) {
+                if (!isNaN(periodCons) && periodCons < 0) {
+                    fcaPeriodIssue = 'Per: revisar consumo acumulado';
+                    fcaDiffClass = 'negative';
+                } else if (periodBioGain > 0 && !isNaN(periodCons)) {
                     let fcaP = periodCons / periodBioGain;
                     fcaPeriodValue = fcaP.toFixed(2);
                     hasPeriodFCA = true;
@@ -299,11 +305,17 @@
                 `);
             }
             if (fcaGlobalValue) {
+                const fcaSubtextClass = hasPeriodFCA || fcaPeriodIssue
+                    ? fcaDiffClass
+                    : (parseFloat(fcaGlobalValue) < 1.5 ? 'positive' : '');
+                const fcaSubtext = hasPeriodFCA
+                    ? fcaPeriodArrow + 'Per: ' + fcaPeriodValue + ' (' + fcaPeriodEval + ')'
+                    : (fcaPeriodIssue || fcaGlobalEval);
                 metricCards.push(`
                     <div class="metric-box">
                         <span class="metric-label">CONVERSIÓN (FCA)</span>
                         <span class="metric-value">${fcaGlobalValue}</span>
-                        <span class="metric-subtext ${hasPeriodFCA ? fcaDiffClass : (parseFloat(fcaGlobalValue) < 1.5 ? 'positive' : '')}">${hasPeriodFCA ? fcaPeriodArrow + 'Per: ' + fcaPeriodValue + ' (' + fcaPeriodEval + ')' : fcaGlobalEval}</span>
+                        <span class="metric-subtext ${fcaSubtextClass}">${fcaSubtext}</span>
                         ${periodDays > 0 ? `<span class="period-label">Últ. ${periodDays} días</span>` : ''}
                     </div>
                 `);
@@ -395,7 +407,7 @@
         // Snapshot-style scale: compute once when report view opens.
         const horizontalPreviewPadding = window.innerWidth <= 600 ? 16 : 24;
         const availableWidth = Math.max(0, reportView.clientWidth - horizontalPreviewPadding);
-        const letterPreviewWidthPx = (196 / 25.4) * 96; // 196mm rendered at 96dpi
+        const letterPreviewWidthPx = (195.9 / 25.4) * 96; // US Letter width minus 10mm margins.
         const paperWidth = letterPreviewWidthPx;
         const scale = Math.min(1, availableWidth / paperWidth);
         reportView.style.setProperty('--report-preview-scale', scale.toFixed(4));
@@ -449,9 +461,95 @@
         showView('form-view');
     });
 
+    let footerGroupState = null;
+
     function resetPrintFooterPosition() {
         const footer = document.querySelector('.report-footer-print');
         if (footer) footer.style.marginTop = '';
+        if (footerGroupState) {
+            const { wrapper, blocks, footerPlaceholder } = footerGroupState;
+            blocks.forEach(({ block, placeholder }) => {
+                if (placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(block, placeholder);
+                    placeholder.remove();
+                }
+            });
+            if (footerPlaceholder.parentNode && footer) {
+                footerPlaceholder.parentNode.insertBefore(footer, footerPlaceholder);
+                footerPlaceholder.remove();
+            }
+            if (wrapper.parentNode) wrapper.remove();
+            footerGroupState = null;
+        }
+        document.querySelectorAll('.keep-with-footer').forEach((block) => {
+            block.classList.remove('keep-with-footer');
+        });
+    }
+
+    function getOuterHeight(element) {
+        const style = window.getComputedStyle(element);
+        const marginTop = parseFloat(style.marginTop) || 0;
+        const marginBottom = parseFloat(style.marginBottom) || 0;
+        return element.offsetHeight + marginTop + marginBottom;
+    }
+
+    function getVisibleReportBlocks() {
+        return Array.from(document.querySelectorAll(
+            '.report-content .lake-report-card, .report-content > .summary-card'
+        )).filter((block) => {
+            return !block.classList.contains('hidden-section') && block.offsetHeight > 0;
+        });
+    }
+
+    function getFooterCompanionBlocks(blocks, footerHeight, printablePageHeightPx) {
+        const pageSafetyGap = 40;
+        const maxGroupHeight = printablePageHeightPx - pageSafetyGap;
+        const minCompanionHeight = Math.min(
+            printablePageHeightPx * 0.42,
+            Math.max(footerHeight * 1.6, 260)
+        );
+        const selectedBlocks = [];
+        let selectedHeight = 0;
+
+        for (let index = blocks.length - 1; index >= 0; index -= 1) {
+            const block = blocks[index];
+            const blockHeight = getOuterHeight(block);
+            const nextGroupHeight = selectedHeight + blockHeight + footerHeight;
+
+            if (selectedBlocks.length > 0 && nextGroupHeight > maxGroupHeight) break;
+
+            selectedBlocks.unshift(block);
+            selectedHeight += blockHeight;
+
+            if (selectedHeight >= minCompanionHeight) break;
+        }
+
+        return selectedBlocks;
+    }
+
+    function groupBlocksWithFooter(blocks, footer) {
+        const reportContent = document.querySelector('.report-content');
+        if (!reportContent || blocks.length === 0 || !footer || footerGroupState) return;
+
+        const footerPlaceholder = document.createComment('footer placeholder');
+        const blockStates = blocks.map((block) => {
+            const placeholder = document.createComment('report ending block placeholder');
+            block.parentNode.insertBefore(placeholder, block);
+            return { block, placeholder };
+        });
+        footer.parentNode.insertBefore(footerPlaceholder, footer);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'report-ending keep-with-footer';
+        reportContent.insertBefore(wrapper, footerPlaceholder);
+        blocks.forEach((block) => wrapper.appendChild(block));
+        wrapper.appendChild(footer);
+
+        footerGroupState = {
+            wrapper,
+            blocks: blockStates,
+            footerPlaceholder,
+        };
     }
 
     function positionFooterOnLastPrintedPage() {
@@ -465,11 +563,27 @@
 
         resetPrintFooterPosition();
 
-        const printablePageHeightPx = (259 / 25.4) * 96;
+        const printablePageHeightPx = (259.4 / 25.4) * 96;
         const footerHeight = footer.offsetHeight;
         const contentHeightBeforeFooter = footer.offsetTop - paper.offsetTop;
         const totalHeight = contentHeightBeforeFooter + footerHeight;
         const remainder = totalHeight % printablePageHeightPx;
+        const contentOnLastPage = contentHeightBeforeFooter % printablePageHeightPx;
+        const remainingOnLastPage = contentOnLastPage === 0 ? 0 : printablePageHeightPx - contentOnLastPage;
+        const minCompanionHeight = Math.max(footerHeight * 1.25, 160);
+        const footerNeedsNewPage = remainingOnLastPage < footerHeight + 24;
+        const footerHasWeakCompanion = contentOnLastPage < minCompanionHeight;
+        const footerWouldBeOrphaned = contentHeightBeforeFooter > 0 && (footerNeedsNewPage || footerHasWeakCompanion);
+
+        if (footerWouldBeOrphaned) {
+            const visibleBlocks = getVisibleReportBlocks();
+            const companionBlocks = getFooterCompanionBlocks(visibleBlocks, footerHeight, printablePageHeightPx);
+            groupBlocksWithFooter(companionBlocks, footer);
+            footer.style.marginTop = '12px';
+            if (measuringScreenPreview) paper.style.zoom = previousZoom;
+            return;
+        }
+
         const push = remainder === 0 ? 0 : printablePageHeightPx - remainder;
 
         footer.style.marginTop = `${Math.max(0, push)}px`;

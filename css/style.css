@@ -566,10 +566,9 @@ body.report-preview-active {
 }
 
 #report-view .report-paper {
-    width: 196mm;
-    min-height: 259mm; /* US Letter printable area with 10mm margins */
-    display: flex;
-    flex-direction: column;
+    width: 195.9mm;
+    min-height: 259.4mm; /* US Letter printable area with 10mm margins */
+    display: block;
     zoom: var(--report-preview-scale, 1);
     margin: 0 auto 24px;
     border-radius: 4px;
@@ -606,7 +605,6 @@ body.report-preview-active {
 
 #report-view .report-content {
     padding: 0;
-    flex: 1;
 }
 
 .report-branding-img {
@@ -631,7 +629,6 @@ body.report-preview-active {
 .report-content {
     padding: 0 32px 20px;
     background: var(--color-surface);
-    flex: 1;
 }
 
 /* Compact Header Layout */
@@ -765,7 +762,7 @@ body.report-preview-active {
 
     /* Keep US Letter proportions and use fixed preview scale */
     #report-view .report-paper {
-        width: 196mm;
+        width: 195.9mm;
         margin-left: auto;
         margin-right: auto;
     }
@@ -822,9 +819,25 @@ body.report-preview-active {
 }
 
 .report-footer-print {
-    margin-top: auto;
+    margin-top: 12px;
     break-inside: avoid;
     page-break-inside: avoid;
+}
+
+.report-ending {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.report-ending.keep-with-footer {
+    display: flex;
+    flex-direction: column;
+    min-height: 259.4mm;
+}
+
+.report-ending.keep-with-footer > .report-footer-print {
+    margin-top: auto !important;
+    padding-top: 12px;
 }
 
 .lake-card-header {
@@ -1018,6 +1031,14 @@ body.report-preview-active {
         margin: 10mm;
     }
 
+    html,
+    body,
+    body.report-preview-active {
+        width: auto;
+        min-height: auto;
+        background: #fff !important;
+    }
+
     /* Hide non-print elements */
     .no-print,
     .sticky-bottom,
@@ -1036,22 +1057,36 @@ body.report-preview-active {
 
     .container {
         width: 100%;
-        max-width: 196mm;
-        padding: 0;
+        max-width: 195.9mm;
+        padding: 0 !important;
         margin: 0 auto;
-        background: transparent;
+        background: #fff !important;
     }
 
+    body.report-preview-active .container {
+        max-width: 195.9mm;
+        padding: 0 !important;
+    }
+
+    #report-view {
+        overflow: visible !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    #report-view .report-paper,
     .report-paper {
-        box-shadow: none;
-        outline: none;
+        width: 195.9mm !important;
+        min-height: 259.4mm;
+        background: #fff !important;
+        box-shadow: none !important;
+        outline: none !important;
         border-radius: 0;
-        margin: 0;
-        min-height: 259mm;
-        display: flex;
-        flex-direction: column;
+        margin: 0 auto !important;
+        display: block !important;
         transform: none !important;
         zoom: 1 !important;
+        overflow: visible !important;
     }
 
     .view.hidden {
@@ -1084,6 +1119,7 @@ body.report-preview-active {
     }
 
     .footer-img {
+        background: #fff !important;
         margin-top: 0;
         border-top: none;
         padding-top: 0;
@@ -1091,7 +1127,6 @@ body.report-preview-active {
 
     .report-content {
         padding: 0;
-        flex: 1;
     }
 
     .report-title {
@@ -1126,6 +1161,7 @@ body.report-preview-active {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-left: 3px solid var(--color-accent) !important;
+        box-shadow: none !important;
         padding: 12px 14px;
         margin-bottom: 12px;
         border-radius: 8px;
@@ -1151,7 +1187,30 @@ body.report-preview-active {
     }
 
     .report-footer-print {
-        margin-top: auto;
+        margin-top: 12px;
+        break-before: avoid;
+        page-break-before: avoid;
+    }
+
+    .report-ending,
+    .keep-with-footer {
+        break-before: page;
+        page-break-before: always;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        break-after: avoid;
+        page-break-after: avoid;
+    }
+
+    .report-ending.keep-with-footer {
+        display: flex;
+        flex-direction: column;
+        min-height: 258mm;
+    }
+
+    .report-ending.keep-with-footer > .report-footer-print {
+        margin-top: auto !important;
+        padding-top: 12px;
     }
 
     .lake-report-card {
@@ -1159,6 +1218,13 @@ body.report-preview-active {
         margin-bottom: 10px;
         border-radius: 8px;
         page-break-inside: avoid;
+    }
+
+    .metric-box,
+    .lake-footer-bar {
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
     }
 
     .lake-card-header {
