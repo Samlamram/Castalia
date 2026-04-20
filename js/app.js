@@ -137,6 +137,8 @@
 
     // ── Render Report ──
     function renderReport(data) {
+        resetPrintFooterPosition();
+
         const visibleInfoItems = [
             renderInfoItem('item-date', 'out-date', formatDate(data.date)),
             renderInfoItem('item-municipality', 'out-municipality', data.municipality),
@@ -391,7 +393,8 @@
         if (!reportView || !reportPaper) return;
 
         // Snapshot-style scale: compute once when report view opens.
-        const availableWidth = Math.max(0, window.innerWidth);
+        const horizontalPreviewPadding = window.innerWidth <= 600 ? 16 : 24;
+        const availableWidth = Math.max(0, reportView.clientWidth - horizontalPreviewPadding);
         const letterPreviewWidthPx = (196 / 25.4) * 96; // 196mm rendered at 96dpi
         const paperWidth = letterPreviewWidthPx;
         const scale = Math.min(1, availableWidth / paperWidth);
@@ -456,6 +459,10 @@
         const footer = document.querySelector('.report-footer-print');
         if (!paper || !footer) return;
 
+        const measuringScreenPreview = document.body.classList.contains('report-preview-active') && !window.matchMedia('print').matches;
+        const previousZoom = paper.style.zoom;
+        if (measuringScreenPreview) paper.style.zoom = '1';
+
         resetPrintFooterPosition();
 
         const printablePageHeightPx = (259 / 25.4) * 96;
@@ -466,6 +473,7 @@
         const push = remainder === 0 ? 0 : printablePageHeightPx - remainder;
 
         footer.style.marginTop = `${Math.max(0, push)}px`;
+        if (measuringScreenPreview) paper.style.zoom = previousZoom;
     }
 
     // ── Print / Save as PDF (native browser dialog, A4 styles) ──
