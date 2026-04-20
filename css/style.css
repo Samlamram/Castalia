@@ -1,4 +1,4 @@
-/* ===========================
+﻿/* ===========================
    CSS Variables / Design Tokens
    =========================== */
 :root {
@@ -545,6 +545,37 @@ body {
     margin-bottom: 40px;
 }
 
+/* Screen: Table layout reset (table acts as normal block on screen) */
+.report-layout-table,
+.report-layout-table thead,
+.report-layout-table tfoot,
+.report-layout-table tbody,
+.report-layout-table tr,
+.report-layout-table td {
+    display: block;
+    border: none;
+    padding: 0;
+    margin: 0;
+    border-spacing: 0;
+}
+
+.report-layout-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Screen: Hide print-only spacers */
+.print-header-space,
+.print-footer-space {
+    display: none;
+}
+
+/* Screen: Hide print-only running header/footer */
+.print-running-header,
+.print-running-footer {
+    display: none;
+}
+
 /* US Letter-like preview on screen for near 1:1 print output */
 #report-view {
     overflow-x: hidden;
@@ -567,7 +598,7 @@ body.report-preview-active {
 
 #report-view .report-paper {
     width: 195.9mm;
-    min-height: 259.4mm; /* US Letter printable area with 10mm margins */
+    min-height: 259.4mm;
     display: block;
     zoom: var(--report-preview-scale, 1);
     margin: 0 auto 24px;
@@ -576,8 +607,7 @@ body.report-preview-active {
     outline: 1px solid rgba(23, 42, 70, 0.08);
 }
 
-#report-view .report-footer-print,
-#report-view .footer-img {
+#report-view .report-footer-screen .footer-img {
     margin-top: 0;
     padding-top: 0;
     border-top: none;
@@ -818,26 +848,8 @@ body.report-preview-active {
     padding-bottom: 0;
 }
 
-.report-footer-print {
+.report-footer-screen {
     margin-top: 12px;
-    break-inside: avoid;
-    page-break-inside: avoid;
-}
-
-.report-ending {
-    break-inside: avoid;
-    page-break-inside: avoid;
-}
-
-.report-ending.keep-with-footer {
-    display: flex;
-    flex-direction: column;
-    min-height: 259.4mm;
-}
-
-.report-ending.keep-with-footer > .report-footer-print {
-    margin-top: auto !important;
-    padding-top: 12px;
 }
 
 .lake-card-header {
@@ -1077,7 +1089,7 @@ body.report-preview-active {
     #report-view .report-paper,
     .report-paper {
         width: 195.9mm !important;
-        min-height: 259.4mm;
+        min-height: auto;
         background: #fff !important;
         box-shadow: none !important;
         outline: none !important;
@@ -1097,32 +1109,131 @@ body.report-preview-active {
         display: none !important;
     }
 
-    /* Report View Print */
-    .report-header-compact {
-        padding: 0 0 16px;
+    /* â”€â”€ Running Header (repeats on every page) â”€â”€ */
+    .print-running-header {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 13mm;
         align-items: center;
-        gap: 16px;
+        gap: 8px;
+        padding: 0 2mm;
+        border-bottom: 2px solid var(--color-accent);
+        background: #fff;
+        z-index: 1000;
     }
 
-    .report-header-logo {
-        flex: 0 0 100px;
+    .print-rh-logo {
+        height: 9mm;
+        width: auto;
+        object-fit: contain;
     }
 
-    .report-title-compact {
-        font-size: 1.4rem;
+    .print-rh-title {
+        font-family: var(--font);
+        font-size: 8.5pt;
+        font-weight: 800;
+        color: var(--color-primary);
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    .print-rh-detail {
+        margin-left: auto;
+        font-family: var(--font);
+        font-size: 7pt;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+    }
+
+    /* â”€â”€ Running Footer (repeats on every page) â”€â”€ */
+    .print-running-footer {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 10mm;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        z-index: 1000;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .print-rf-img {
+        height: 8mm;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    /* â”€â”€ Table layout for pagination with spacers â”€â”€ */
+    .report-layout-table {
+        display: table !important;
+        width: 100% !important;
+    }
+
+    .report-layout-table thead {
+        display: table-header-group !important;
+    }
+
+    .report-layout-table tfoot {
+        display: table-footer-group !important;
+    }
+
+    .report-layout-table tbody {
+        display: table-row-group !important;
+    }
+
+    .report-layout-table tr {
+        display: table-row !important;
+    }
+
+    .report-layout-table td {
+        display: table-cell !important;
+    }
+
+    /* Spacers reserve space so content doesn't overlap fixed elements */
+    .print-header-space {
+        display: block !important;
+        height: 15mm; /* matches running header + gap */
+    }
+
+    .print-footer-space {
+        display: block !important;
+        height: 12mm; /* matches running footer + gap */
+    }
+
+    /* â”€â”€ Hide screen-only footer in print â”€â”€ */
+    .report-footer-screen {
+        display: none !important;
+    }
+
+    /* â”€â”€ First page: hide redundant logo/title (running header covers it) â”€â”€ */
+    .report-header-compact .report-header-logo {
+        display: none !important;
+    }
+
+    .report-header-compact .report-title-compact {
+        display: none !important;
+    }
+
+    .report-header-compact {
+        padding: 0 0 12px;
         margin-bottom: 8px;
+    }
+
+    .report-header-info {
+        justify-content: flex-start;
     }
 
     .info-grid-compact {
         font-size: 7.5pt;
         gap: 6px 12px;
-    }
-
-    .footer-img {
-        background: #fff !important;
-        margin-top: 0;
-        border-top: none;
-        padding-top: 0;
     }
 
     .report-content {
@@ -1180,37 +1291,6 @@ body.report-preview-active {
 
     .info-grid {
         grid-template-columns: 1fr 1fr;
-    }
-
-    .report-header-compact {
-        margin-bottom: 15px;
-    }
-
-    .report-footer-print {
-        margin-top: 12px;
-        break-before: avoid;
-        page-break-before: avoid;
-    }
-
-    .report-ending,
-    .keep-with-footer {
-        break-before: page;
-        page-break-before: always;
-        break-inside: avoid;
-        page-break-inside: avoid;
-        break-after: avoid;
-        page-break-after: avoid;
-    }
-
-    .report-ending.keep-with-footer {
-        display: flex;
-        flex-direction: column;
-        min-height: 258mm;
-    }
-
-    .report-ending.keep-with-footer > .report-footer-print {
-        margin-top: auto !important;
-        padding-top: 12px;
     }
 
     .lake-report-card {
@@ -1306,3 +1386,4 @@ body.report-preview-active {
     }
     
 }
+

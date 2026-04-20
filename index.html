@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Castalia STC">
     <link rel="apple-touch-icon" href="./assets/logo.png">
     <!-- Styles -->
-    <link rel="stylesheet" href="./css/style.css?v=80">
+    <link rel="stylesheet" href="./css/style.css?v=90">
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -109,49 +109,65 @@
 
         <!-- REPORT VIEW -->
         <div id="report-view" class="view hidden">
+            <!-- Print-only: Running header (repeats on every printed page) -->
+            <div class="print-running-header">
+                <img src="./assets/logo.png" alt="" class="print-rh-logo">
+                <span class="print-rh-title">INFORME TÉCNICO DE CAMPO</span>
+                <span class="print-rh-detail" id="print-rh-detail"></span>
+            </div>
+            <!-- Print-only: Running footer (repeats on every printed page) -->
+            <div class="print-running-footer">
+                <img src="./assets/footer.png" alt="" class="print-rf-img">
+            </div>
+
             <div class="report-paper">
-                <!-- Compact Header Layout -->
-                <div class="report-header-compact">
-                    <div class="report-header-logo">
-                        <img src="./assets/logo.png" alt="Castalia Artesanos Piscícolas">
-                    </div>
-                    <div class="report-header-info">
-                        <h1 class="report-title-compact">INFORME TÉCNICO DE CAMPO</h1>
-
-                        <div id="report-info-grid" class="info-grid-compact">
-                            <div id="item-date" class="info-item"><span class="label">FECHA:</span> <span id="out-date" class="data-value"></span></div>
-                            <div id="item-farm" class="info-item"><span class="label">GRANJA:</span> <span id="out-farm" class="data-value"></span></div>
-                            <div id="item-municipality" class="info-item"><span class="label">MUNICIPIO:</span> <span id="out-municipality" class="data-value"></span></div>
-                            <div id="item-owner" class="info-item"><span class="label">PROPIETARIO:</span> <span id="out-owner" class="data-value"></span></div>
-                            <div id="item-attendedBy" class="info-item"><span class="label">ATENDIDO POR:</span> <span id="out-attendedBy" class="data-value"></span></div>
-                            <div id="item-technician" class="info-item"><span class="label">TÉCNICOS:</span> <span id="out-technician" class="data-value"></span></div>
+                <table class="report-layout-table">
+                    <thead><tr><td><div class="print-header-space"></div></td></tr></thead>
+                    <tfoot><tr><td><div class="print-footer-space"></div></td></tr></tfoot>
+                    <tbody><tr><td class="report-body-cell">
+                        <!-- Compact Header Layout -->
+                        <div class="report-header-compact">
+                            <div class="report-header-logo">
+                                <img src="./assets/logo.png" alt="Castalia Artesanos Piscícolas">
+                            </div>
+                            <div class="report-header-info">
+                                <h1 class="report-title-compact">INFORME TÉCNICO DE CAMPO</h1>
+                                <div id="report-info-grid" class="info-grid-compact">
+                                    <div id="item-date" class="info-item"><span class="label">FECHA:</span> <span id="out-date" class="data-value"></span></div>
+                                    <div id="item-farm" class="info-item"><span class="label">GRANJA:</span> <span id="out-farm" class="data-value"></span></div>
+                                    <div id="item-municipality" class="info-item"><span class="label">MUNICIPIO:</span> <span id="out-municipality" class="data-value"></span></div>
+                                    <div id="item-owner" class="info-item"><span class="label">PROPIETARIO:</span> <span id="out-owner" class="data-value"></span></div>
+                                    <div id="item-attendedBy" class="info-item"><span class="label">ATENDIDO POR:</span> <span id="out-attendedBy" class="data-value"></span></div>
+                                    <div id="item-technician" class="info-item"><span class="label">TÉCNICOS:</span> <span id="out-technician" class="data-value"></span></div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="report-content">
-                    <div id="section-lakes-report" class="report-section">
-                        <h2 class="section-title">Resumen de Estanques</h2>
-                        <div id="out-lakes">
-                            <!-- Lake cards will be injected here -->
+                        <div class="report-content">
+                            <div id="section-lakes-report" class="report-section">
+                                <h2 class="section-title">Resumen de Estanques</h2>
+                                <div id="out-lakes">
+                                    <!-- Lake cards will be injected here -->
+                                </div>
+                            </div>
+
+                            <div id="section-recommendations-report" class="report-section keep-together summary-card">
+                                <h2 class="section-title">Recomendaciones Generales</h2>
+                                <p id="out-recommendations" class="text-block"></p>
+                            </div>
+
+                            <div id="section-actions-report" class="report-section keep-together summary-card">
+                                <h2 class="section-title">Acciones a Realizar</h2>
+                                <p id="out-actions" class="text-block"></p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div id="section-recommendations-report" class="report-section keep-together summary-card">
-                        <h2 class="section-title">Recomendaciones Generales</h2>
-                        <p id="out-recommendations" class="text-block"></p>
-                    </div>
-
-                    <div id="section-actions-report" class="report-section keep-together summary-card">
-                        <h2 class="section-title">Acciones a Realizar</h2>
-                        <p id="out-actions" class="text-block"></p>
-                    </div>
-
-                    <!-- Footer Image -->
-                    <div class="report-footer-print">
-                        <img src="./assets/footer.png" alt="Castalia Artesanos Piscícolas" class="report-branding-img footer-img">
-                    </div>
-                </div>
+                        <!-- Footer Image (screen preview only) -->
+                        <div class="report-footer-screen">
+                            <img src="./assets/footer.png" alt="Castalia Artesanos Piscícolas" class="report-branding-img footer-img">
+                        </div>
+                    </td></tr></tbody>
+                </table>
             </div>
 
             <!-- Report Actions (Hidden in print) -->
@@ -227,6 +243,6 @@
     </template>
 
     <!-- Scripts -->
-    <script src="./js/app.js?v=80"></script>
+    <script src="./js/app.js?v=90"></script>
 </body>
 </html>

@@ -22,7 +22,6 @@
     // ── Auto-fill Today's Date ──
     const dateInput = document.getElementById('date');
     if (dateInput && !dateInput.value) {
-        // Gets local date string correctly formatted as YYYY-MM-DD
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -48,8 +47,6 @@
             setTimeout(() => splashScreen.remove(), 500);
         }, 800);
     });
-
-
 
     // ── Lake Block Management ──
     function addLakeBlock() {
@@ -107,9 +104,7 @@
             };
             const hasAnyLakeValue = Object.values(lakeData).some(hasValue);
             if (!hasAnyLakeValue) return;
-            lakes.push({
-                ...lakeData,
-            });
+            lakes.push({ ...lakeData });
         });
         return lakes;
     }
@@ -137,8 +132,6 @@
 
     // ── Render Report ──
     function renderReport(data) {
-        resetPrintFooterPosition();
-
         const visibleInfoItems = [
             renderInfoItem('item-date', 'out-date', formatDate(data.date)),
             renderInfoItem('item-municipality', 'out-municipality', data.municipality),
@@ -148,6 +141,15 @@
             renderInfoItem('item-technician', 'out-technician', data.technician),
         ].filter(Boolean).length;
         reportInfoGrid.classList.toggle('hidden-section', visibleInfoItems === 0);
+
+        // Populate print running header detail (farm + date for pages 2+)
+        const printDetail = document.getElementById('print-rh-detail');
+        if (printDetail) {
+            const parts = [];
+            if (hasValue(data.farm)) parts.push(data.farm);
+            if (hasValue(data.date)) parts.push(formatDate(data.date));
+            printDetail.textContent = parts.join(' · ');
+        }
 
         // Lakes
         const outLakes = document.getElementById('out-lakes');
@@ -272,10 +274,10 @@
                     if (fcaGlobalValue) {
                         let fcbG = parseFloat(fcaGlobalValue);
                         if (fcaP > fcbG) {
-                            fcaPeriodArrow = '↑ '; // Aumentó el FCA (peor conversión)
+                            fcaPeriodArrow = '↑ ';
                             fcaDiffClass = 'negative';
                         } else if (fcaP < fcbG) {
-                            fcaPeriodArrow = '↓ '; // Bajó el FCA (mejor conversión)
+                            fcaPeriodArrow = '↓ ';
                             fcaDiffClass = 'positive';
                         }
                     }
@@ -404,10 +406,9 @@
         const reportPaper = reportView ? reportView.querySelector('.report-paper') : null;
         if (!reportView || !reportPaper) return;
 
-        // Snapshot-style scale: compute once when report view opens.
         const horizontalPreviewPadding = window.innerWidth <= 600 ? 16 : 24;
         const availableWidth = Math.max(0, reportView.clientWidth - horizontalPreviewPadding);
-        const letterPreviewWidthPx = (195.9 / 25.4) * 96; // US Letter width minus 10mm margins.
+        const letterPreviewWidthPx = (195.9 / 25.4) * 96;
         const paperWidth = letterPreviewWidthPx;
         const scale = Math.min(1, availableWidth / paperWidth);
         reportView.style.setProperty('--report-preview-scale', scale.toFixed(4));
@@ -424,17 +425,12 @@
         target.classList.add('active');
         document.body.classList.toggle('report-preview-active', viewId === 'report-view');
         if (viewId === 'report-view') {
-            // Wait for layout pass so scale snapshots correctly.
             requestAnimationFrame(() => {
                 updateReportPreviewScale();
-                positionFooterOnLastPrintedPage();
             });
-        } else {
-            resetPrintFooterPosition();
         }
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
-
 
     // ── Form Submit → Generate Report ──
     reportForm.addEventListener('submit', (e) => {
@@ -461,154 +457,20 @@
         showView('form-view');
     });
 
-    let footerGroupState = null;
-
-    function resetPrintFooterPosition() {
-        const footer = document.querySelector('.report-footer-print');
-        if (footer) footer.style.marginTop = '';
-        if (footerGroupState) {
-            const { wrapper, blocks, footerPlaceholder } = footerGroupState;
-            blocks.forEach(({ block, placeholder }) => {
-                if (placeholder.parentNode) {
-                    placeholder.parentNode.insertBefore(block, placeholder);
-                    placeholder.remove();
-                }
-            });
-            if (footerPlaceholder.parentNode && footer) {
-                footerPlaceholder.parentNode.insertBefore(footer, footerPlaceholder);
-                footerPlaceholder.remove();
-            }
-            if (wrapper.parentNode) wrapper.remove();
-            footerGroupState = null;
-        }
-        document.querySelectorAll('.keep-with-footer').forEach((block) => {
-            block.classList.remove('keep-with-footer');
-        });
-    }
-
-    function getOuterHeight(element) {
-        const style = window.getComputedStyle(element);
-        const marginTop = parseFloat(style.marginTop) || 0;
-        const marginBottom = parseFloat(style.marginBottom) || 0;
-        return element.offsetHeight + marginTop + marginBottom;
-    }
-
-    function getVisibleReportBlocks() {
-        return Array.from(document.querySelectorAll(
-            '.report-content .lake-report-card, .report-content > .summary-card'
-        )).filter((block) => {
-            return !block.classList.contains('hidden-section') && block.offsetHeight > 0;
-        });
-    }
-
-    function getFooterCompanionBlocks(blocks, footerHeight, printablePageHeightPx) {
-        const pageSafetyGap = 40;
-        const maxGroupHeight = printablePageHeightPx - pageSafetyGap;
-        const minCompanionHeight = Math.min(
-            printablePageHeightPx * 0.42,
-            Math.max(footerHeight * 1.6, 260)
-        );
-        const selectedBlocks = [];
-        let selectedHeight = 0;
-
-        for (let index = blocks.length - 1; index >= 0; index -= 1) {
-            const block = blocks[index];
-            const blockHeight = getOuterHeight(block);
-            const nextGroupHeight = selectedHeight + blockHeight + footerHeight;
-
-            if (selectedBlocks.length > 0 && nextGroupHeight > maxGroupHeight) break;
-
-            selectedBlocks.unshift(block);
-            selectedHeight += blockHeight;
-
-            if (selectedHeight >= minCompanionHeight) break;
-        }
-
-        return selectedBlocks;
-    }
-
-    function groupBlocksWithFooter(blocks, footer) {
-        const reportContent = document.querySelector('.report-content');
-        if (!reportContent || blocks.length === 0 || !footer || footerGroupState) return;
-
-        const footerPlaceholder = document.createComment('footer placeholder');
-        const blockStates = blocks.map((block) => {
-            const placeholder = document.createComment('report ending block placeholder');
-            block.parentNode.insertBefore(placeholder, block);
-            return { block, placeholder };
-        });
-        footer.parentNode.insertBefore(footerPlaceholder, footer);
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'report-ending keep-with-footer';
-        reportContent.insertBefore(wrapper, footerPlaceholder);
-        blocks.forEach((block) => wrapper.appendChild(block));
-        wrapper.appendChild(footer);
-
-        footerGroupState = {
-            wrapper,
-            blocks: blockStates,
-            footerPlaceholder,
-        };
-    }
-
-    function positionFooterOnLastPrintedPage() {
-        const paper = document.querySelector('.report-paper');
-        const footer = document.querySelector('.report-footer-print');
-        if (!paper || !footer) return;
-
-        const measuringScreenPreview = document.body.classList.contains('report-preview-active') && !window.matchMedia('print').matches;
-        const previousZoom = paper.style.zoom;
-        if (measuringScreenPreview) paper.style.zoom = '1';
-
-        resetPrintFooterPosition();
-
-        const printablePageHeightPx = (259.4 / 25.4) * 96;
-        const footerHeight = footer.offsetHeight;
-        const contentHeightBeforeFooter = footer.offsetTop - paper.offsetTop;
-        const totalHeight = contentHeightBeforeFooter + footerHeight;
-        const remainder = totalHeight % printablePageHeightPx;
-        const contentOnLastPage = contentHeightBeforeFooter % printablePageHeightPx;
-        const remainingOnLastPage = contentOnLastPage === 0 ? 0 : printablePageHeightPx - contentOnLastPage;
-        const minCompanionHeight = Math.max(footerHeight * 1.25, 160);
-        const footerNeedsNewPage = remainingOnLastPage < footerHeight + 24;
-        const footerHasWeakCompanion = contentOnLastPage < minCompanionHeight;
-        const footerWouldBeOrphaned = contentHeightBeforeFooter > 0 && (footerNeedsNewPage || footerHasWeakCompanion);
-
-        if (footerWouldBeOrphaned) {
-            const visibleBlocks = getVisibleReportBlocks();
-            const companionBlocks = getFooterCompanionBlocks(visibleBlocks, footerHeight, printablePageHeightPx);
-            groupBlocksWithFooter(companionBlocks, footer);
-            footer.style.marginTop = '12px';
-            if (measuringScreenPreview) paper.style.zoom = previousZoom;
-            return;
-        }
-
-        const push = remainder === 0 ? 0 : printablePageHeightPx - remainder;
-
-        footer.style.marginTop = `${Math.max(0, push)}px`;
-        if (measuringScreenPreview) paper.style.zoom = previousZoom;
-    }
-
-    // ── Print / Save as PDF (native browser dialog, A4 styles) ──
+    // ── Print / Save as PDF (native browser dialog) ──
     btnPrint.addEventListener('click', function () {
         var actionsBar = document.querySelector('.report-actions');
         if (actionsBar) actionsBar.style.display = 'none';
         btnPrint.textContent = 'Abriendo...';
         btnPrint.disabled = true;
         window.scrollTo(0, 0);
-        positionFooterOnLastPrintedPage();
         window.print();
-        resetPrintFooterPosition();
         if (actionsBar) actionsBar.style.display = '';
         btnPrint.textContent = 'Descargar PDF';
         btnPrint.disabled = false;
     });
 
     // ── Service Worker Registration ──
-    window.addEventListener('beforeprint', positionFooterOnLastPrintedPage);
-    window.addEventListener('afterprint', resetPrintFooterPosition);
-
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
             .register('./service-worker.js')
