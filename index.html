@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Castalia STC">
     <link rel="apple-touch-icon" href="./assets/logo.png">
     <!-- Styles -->
-    <link rel="stylesheet" href="./css/style.css?v=61">
+    <link rel="stylesheet" href="./css/style.css?v=64">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -74,24 +74,15 @@
                     </div>
                 </section>
 
-                <!-- Section B: Estanques (Opcional) -->
+                <!-- Section B: Estanques -->
                 <section class="card optional-section" id="section-lakes">
                     <div class="optional-section-header">
-                        <h3>B. Estanques <span class="optional-badge">Opcional</span></h3>
-                        <label class="optional-toggle">
-                            <input type="checkbox" id="include-lakes">
-                            <span>Incluir</span>
-                        </label>
+                        <h3>B. Estanques</h3>
+                        <button type="button" id="btn-add-lake" class="btn btn-outline btn-add-inline">+ Agregar Estanque</button>
                     </div>
-                    <details id="lakes-details" class="optional-details">
-                        <summary>Configurar estanques</summary>
-                        <div class="optional-details-body">
-                            <div id="lakes-container">
-                                <!-- Lake blocks will be injected here -->
-                            </div>
-                            <button type="button" id="btn-add-lake" class="btn btn-outline">+ Agregar Estanque</button>
-                        </div>
-                    </details>
+                    <div id="lakes-container">
+                        <!-- Lake blocks will be injected here -->
+                    </div>
                 </section>
 
                 <!-- Section C: Recomendaciones Generales -->
@@ -226,9 +217,9 @@
                     <input type="number" step="0.01" name="lakeConsumption[]">
                 </div>
                 
-                <!-- Opcional: Para Analíticas y Deltas Semanales -->
+                <!-- Para Analiticas y Deltas Semanales -->
                 <details class="advanced-options full-width">
-                    <summary>Datos de Visita Anterior (Opcional)</summary>
+                    <summary>Datos de Visita Anterior</summary>
                     <div class="advanced-grid">
                         <div class="input-group">
                             <label>Fecha Visita Anterior</label>
@@ -254,6 +245,6 @@
     </template>
 
     <!-- Scripts -->
-    <script src="./js/app.js?v=61"></script>
+    <script src="./js/app.js?v=64"></script>
 </body>
 </html>

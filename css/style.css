@@ -352,6 +352,24 @@ body {
     gap: 12px;
 }
 
+.btn-add-inline {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .optional-section-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .btn-add-inline {
+        width: 100%;
+    }
+}
+
 .optional-badge {
     font-size: 0.7rem;
     font-weight: 600;

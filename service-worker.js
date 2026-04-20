@@ -2,12 +2,12 @@
    Service Worker – Cache-first for offline PWA
    =========================== */
 
-const CACHE_NAME = 'castalia-report-v61';
+const CACHE_NAME = 'castalia-report-v64';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './css/style.css?v=61',
-    './js/app.js?v=61',
+    './css/style.css?v=64',
+    './js/app.js?v=64',
     './manifest.webmanifest',
     './assets/logo.png',
     './assets/header.png',
@@ -41,8 +41,23 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch – serve from cache, fallback to network
+// Fetch navigations from network first, then fall back to cache for offline use.
 self.addEventListener('fetch', (event) => {
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).then((response) => {
+                if (response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clone);
+                    });
+                }
+                return response;
+            }).catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then((cached) => {
             return cached || fetch(event.request).then((response) => {
@@ -55,11 +70,6 @@ self.addEventListener('fetch', (event) => {
                 }
                 return response;
             });
-        }).catch(() => {
-            // Fallback for navigations
-            if (event.request.mode === 'navigate') {
-                return caches.match('./index.html');
-            }
-        })
+        }).catch(() => caches.match('./index.html'))
     );
 });

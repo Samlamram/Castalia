@@ -11,8 +11,6 @@
     const reportView = document.getElementById('report-view');
     const reportForm = document.getElementById('report-form');
     const lakesContainer = document.getElementById('lakes-container');
-    const includeLakesInput = document.getElementById('include-lakes');
-    const lakesDetails = document.getElementById('lakes-details');
     const btnAddLake = document.getElementById('btn-add-lake');
     const btnBack = document.getElementById('btn-back');
     const btnPrint = document.getElementById('btn-print');
@@ -62,7 +60,7 @@
         block.querySelector('.lake-index').textContent = lakeCount;
         const lakeNameInput = block.querySelector('[name="lakeName[]"]');
         if (lakeNameInput) {
-            lakeNameInput.required = !!includeLakesInput.checked;
+            lakeNameInput.required = true;
         }
 
         // Remove button
@@ -87,39 +85,10 @@
         return String(value || '').trim().length > 0;
     }
 
-    function setLakeInputsState(enabled) {
-        lakesContainer.querySelectorAll('input, textarea, select').forEach((el) => {
-            if (el.name === 'lakeName[]') {
-                el.required = enabled;
-            }
-            el.disabled = !enabled;
-        });
-        btnAddLake.disabled = !enabled;
-    }
-
-    function toggleLakeSection(enabled) {
-        if (!enabled) {
-            lakesContainer.innerHTML = '';
-            lakeCount = 0;
-        } else if (lakesContainer.querySelectorAll('.lake-block').length === 0) {
-            addLakeBlock();
-        }
-
-        lakesDetails.open = enabled;
-        lakesDetails.classList.toggle('section-disabled', !enabled);
-        setLakeInputsState(enabled);
-    }
-
     btnAddLake.addEventListener('click', addLakeBlock);
-    includeLakesInput.addEventListener('change', (e) => {
-        toggleLakeSection(e.target.checked);
-    });
-
-    toggleLakeSection(false);
 
     // ── Collect Lake Data ──
     function collectLakes() {
-        if (!includeLakesInput.checked) return [];
         const blocks = lakesContainer.querySelectorAll('.lake-block');
         const lakes = [];
         blocks.forEach((block) => {
