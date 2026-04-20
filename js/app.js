@@ -391,7 +391,7 @@
         if (!reportView || !reportPaper) return;
 
         // Snapshot-style scale: compute once when report view opens.
-        const availableWidth = Math.max(0, window.innerWidth - 16);
+        const availableWidth = Math.max(0, window.innerWidth);
         const letterPreviewWidthPx = (196 / 25.4) * 96; // 196mm rendered at 96dpi
         const paperWidth = letterPreviewWidthPx;
         const scale = Math.min(1, availableWidth / paperWidth);
@@ -410,7 +410,12 @@
         document.body.classList.toggle('report-preview-active', viewId === 'report-view');
         if (viewId === 'report-view') {
             // Wait for layout pass so scale snapshots correctly.
-            requestAnimationFrame(updateReportPreviewScale);
+            requestAnimationFrame(() => {
+                updateReportPreviewScale();
+                positionFooterOnLastPrintedPage();
+            });
+        } else {
+            resetPrintFooterPosition();
         }
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
@@ -441,6 +446,28 @@
         showView('form-view');
     });
 
+    function resetPrintFooterPosition() {
+        const footer = document.querySelector('.report-footer-print');
+        if (footer) footer.style.marginTop = '';
+    }
+
+    function positionFooterOnLastPrintedPage() {
+        const paper = document.querySelector('.report-paper');
+        const footer = document.querySelector('.report-footer-print');
+        if (!paper || !footer) return;
+
+        resetPrintFooterPosition();
+
+        const printablePageHeightPx = (259 / 25.4) * 96;
+        const footerHeight = footer.offsetHeight;
+        const contentHeightBeforeFooter = footer.offsetTop - paper.offsetTop;
+        const totalHeight = contentHeightBeforeFooter + footerHeight;
+        const remainder = totalHeight % printablePageHeightPx;
+        const push = remainder === 0 ? 0 : printablePageHeightPx - remainder;
+
+        footer.style.marginTop = `${Math.max(0, push)}px`;
+    }
+
     // ── Print / Save as PDF (native browser dialog, A4 styles) ──
     btnPrint.addEventListener('click', function () {
         var actionsBar = document.querySelector('.report-actions');
@@ -448,13 +475,18 @@
         btnPrint.textContent = 'Abriendo...';
         btnPrint.disabled = true;
         window.scrollTo(0, 0);
+        positionFooterOnLastPrintedPage();
         window.print();
+        resetPrintFooterPosition();
         if (actionsBar) actionsBar.style.display = '';
         btnPrint.textContent = 'Descargar PDF';
         btnPrint.disabled = false;
     });
 
     // ── Service Worker Registration ──
+    window.addEventListener('beforeprint', positionFooterOnLastPrintedPage);
+    window.addEventListener('afterprint', resetPrintFooterPosition);
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
             .register('./service-worker.js')

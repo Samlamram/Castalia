@@ -560,18 +560,12 @@ body.report-preview-active .container {
 #report-view .report-paper {
     width: 196mm;
     min-height: 259mm; /* US Letter printable area with 10mm margins */
+    display: flex;
+    flex-direction: column;
     transform: scale(var(--report-preview-scale, 1));
-    transform-origin: top center;
+    transform-origin: top left;
     margin: 0 auto 40px;
     border-radius: 0;
-}
-
-#report-view .report-print-table {
-    min-height: 259mm;
-}
-
-#report-view .report-print-table tfoot td {
-    vertical-align: bottom;
 }
 
 #report-view .report-footer-print,
@@ -603,6 +597,7 @@ body.report-preview-active .container {
 
 #report-view .report-content {
     padding: 0;
+    flex: 1;
 }
 
 .report-branding-img {
@@ -627,6 +622,7 @@ body.report-preview-active .container {
 .report-content {
     padding: 0 32px 20px;
     background: var(--color-surface);
+    flex: 1;
 }
 
 /* Compact Header Layout */
@@ -760,7 +756,7 @@ body.report-preview-active .container {
     /* Keep US Letter proportions and use fixed preview scale */
     #report-view .report-paper {
         width: 196mm;
-        margin-left: auto;
+        margin-left: 0;
         margin-right: auto;
     }
 
@@ -815,28 +811,8 @@ body.report-preview-active .container {
     padding-bottom: 0;
 }
 
-/* Report Layout - Table Strategy for repeating Headers/Footers */
-.report-print-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: none;
-}
-
-.report-print-table thead {
-    display: table-header-group;
-}
-
-.report-print-table tfoot {
-    display: table-footer-group;
-}
-
-.report-print-table td {
-    padding: 0;
-    border: none;
-}
-
 .report-footer-print {
-    margin-top: 20px;
+    margin-top: auto;
     break-inside: avoid;
     page-break-inside: avoid;
 }
@@ -1060,6 +1036,10 @@ body.report-preview-active .container {
         box-shadow: none;
         border-radius: 0;
         margin: 0;
+        min-height: 259mm;
+        display: flex;
+        flex-direction: column;
+        transform: none !important;
     }
 
     .view.hidden {
@@ -1099,6 +1079,7 @@ body.report-preview-active .container {
 
     .report-content {
         padding: 0;
+        flex: 1;
     }
 
     .report-title {
@@ -1153,26 +1134,12 @@ body.report-preview-active .container {
         grid-template-columns: 1fr 1fr;
     }
 
-    .report-print-table {
-        margin: 0;
-        width: 100%;
-        min-height: 259mm; /* US Letter height (279mm) - 20mm @page margins */
-    }
-
-    /* Force repetition on every page */
-    thead { display: table-header-group; }
-    tfoot { display: table-footer-group; }
-
     .report-header-compact {
         margin-bottom: 15px;
     }
 
     .report-footer-print {
-        margin-top: 0;
-    }
-
-    .report-print-table tfoot td {
-        vertical-align: bottom;
+        margin-top: auto;
     }
 
     .lake-report-card {
