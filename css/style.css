@@ -472,7 +472,7 @@ body {
     margin-bottom: 40px;
 }
 
-/* A4-like preview on screen for near 1:1 print output */
+/* US Letter-like preview on screen for near 1:1 print output */
 #report-view {
     overflow-x: auto;
 }
@@ -484,14 +484,16 @@ body.report-preview-active .container {
 }
 
 #report-view .report-paper {
-    width: 190mm;
-    min-height: 277mm; /* A4 printable area with 10mm margins */
+    width: 196mm;
+    min-height: 259mm; /* US Letter printable area with 10mm margins */
+    transform: scale(var(--report-preview-scale, 1));
+    transform-origin: top center;
     margin: 0 auto 40px;
     border-radius: 0;
 }
 
 #report-view .report-print-table {
-    min-height: 277mm;
+    min-height: 259mm;
 }
 
 #report-view .report-print-table tfoot td {
@@ -675,10 +677,9 @@ body.report-preview-active .container {
         overflow-x: hidden;
     }
 
-    /* Keep A4 proportions and scale down to fit phone width */
+    /* Keep US Letter proportions and use fixed preview scale */
     #report-view .report-paper {
-        width: 190mm;
-        zoom: clamp(0.1, calc((100vw - 16px) / 190mm), 1);
+        width: 196mm;
         margin-left: auto;
         margin-right: auto;
     }
@@ -945,7 +946,7 @@ body.report-preview-active .container {
    =========================== */
 @media print {
     @page {
-        size: A4 portrait;
+        size: Letter portrait;
         margin: 10mm;
     }
 
@@ -967,7 +968,7 @@ body.report-preview-active .container {
 
     .container {
         width: 100%;
-        max-width: 190mm;
+        max-width: 196mm;
         padding: 0;
         margin: 0 auto;
         background: transparent;
@@ -1071,7 +1072,7 @@ body.report-preview-active .container {
     .report-print-table {
         margin: 0;
         width: 100%;
-        min-height: 277mm; /* A4 height (297mm) - 20mm @page margins */
+        min-height: 259mm; /* US Letter height (279mm) - 20mm @page margins */
     }
 
     /* Force repetition on every page */
@@ -1175,15 +1176,4 @@ body.report-preview-active .container {
         margin-top: 8px;
     }
     
-    /* Pages margins - 9:16 Mobile Aspect Ratio */
-    @page {
-        size: 144mm 256mm;
-        margin: 8mm 10mm;
-    }
-
-    body {
-        background: transparent;
-        color: #000;
-        font-size: 10pt; /* Slightly smaller for mobile PDF fit */
-    }
 }

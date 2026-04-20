@@ -317,6 +317,18 @@
         return div.innerHTML;
     }
 
+    function updateReportPreviewScale() {
+        const reportView = document.getElementById('report-view');
+        const reportPaper = reportView ? reportView.querySelector('.report-paper') : null;
+        if (!reportView || !reportPaper) return;
+
+        // Snapshot-style scale: compute once when report view opens.
+        const availableWidth = Math.max(0, window.innerWidth - 16);
+        const paperWidth = reportPaper.offsetWidth || 1;
+        const scale = Math.min(1, availableWidth / paperWidth);
+        reportView.style.setProperty('--report-preview-scale', scale.toFixed(4));
+    }
+
     // ── View Switching ──
     function showView(viewId) {
         document.querySelectorAll('.view').forEach((v) => {
@@ -327,8 +339,12 @@
         target.classList.remove('hidden');
         target.classList.add('active');
         document.body.classList.toggle('report-preview-active', viewId === 'report-view');
+        if (viewId === 'report-view') {
+            updateReportPreviewScale();
+        }
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
+
 
     // ── Form Submit → Generate Report ──
     reportForm.addEventListener('submit', (e) => {
