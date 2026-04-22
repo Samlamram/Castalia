@@ -1,4 +1,4 @@
-﻿/* ===========================
+/* ===========================
    CSS Variables / Design Tokens
    =========================== */
 :root {
@@ -1208,22 +1208,42 @@ body.report-preview-active {
         height: 12mm; /* matches running footer + gap */
     }
 
-    /* â”€â”€ Hide screen-only footer in print â”€â”€ */
+    /* ── Large footer on last page ── */
     .report-footer-screen {
-        display: none !important;
+        display: block !important;
+        position: relative;
+        z-index: 2000;
+        background: #fff;
+        padding-top: 10px;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 
-    /* â”€â”€ First page: hide redundant logo/title (running header covers it) â”€â”€ */
-    .report-header-compact .report-header-logo {
-        display: none !important;
+    .report-footer-screen .footer-img {
+        width: 100%;
+        height: auto;
+        max-height: 40mm;
+        object-fit: contain;
     }
 
-    .report-header-compact .report-title-compact {
-        display: none !important;
+    .footer-mask {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        height: 100vh;
+        background: #fff;
+        z-index: 2000;
     }
 
+    /* ── First page: Full header, hide running header underneath it ── */
     .report-header-compact {
-        padding: 0 0 12px;
+        position: relative;
+        z-index: 2000;
+        background: #fff;
+        margin-top: -15mm !important;
+        padding-top: 15mm !important;
+        padding-bottom: 12px;
         margin-bottom: 8px;
     }
 
