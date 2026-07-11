@@ -1,16 +1,249 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#059669" />
-    <title>Tienda Castalia</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Castalia – Informe Técnico</title>
+    <meta name="description" content="Aplicación para generar informes técnicos de campo – Castalia Artesanos Piscícolas">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#1b3a5c">
+
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Castalia STC">
+    <link rel="apple-touch-icon" href="./assets/logo.png">
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/style.css?v=91">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- App Shell Navbar -->
+    <nav class="app-nav no-print">
+        <div class="nav-brand">
+            <img src="./assets/logo.png" alt="Castalia Logo" class="nav-logo">
+            <span>Informe Técnico</span>
+        </div>
+    </nav>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash no-print">
+        <img src="./assets/logo.png" alt="Castalia Logo" class="splash-logo">
+        <p>Cargando...</p>
+    </div>
+
+    <main class="container">
+        <!-- FORM VIEW -->
+        <div id="form-view" class="view active no-print">
+
+            <header class="form-header">
+                <h2>Nuevo Informe de Campo</h2>
+                <p>Completa los datos. Funciona sin conexión.</p>
+            </header>
+
+            <form id="report-form">
+                <!-- Section A: Información General -->
+                <section class="card">
+                    <h3>A. Información General</h3>
+                    <div class="input-group">
+                        <label for="date">Fecha</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="municipality">Municipio</label>
+                        <input type="text" id="municipality" name="municipality" placeholder="Ingrese el municipio" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="farm">Granja</label>
+                        <input type="text" id="farm" name="farm" placeholder="Nombre de la granja" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="owner">Propietario</label>
+                        <input type="text" id="owner" name="owner" placeholder="Nombre del propietario" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="attendedBy">Atendido por</label>
+                        <input type="text" id="attendedBy" name="attendedBy" placeholder="¿Quién atendió?" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="technician">Técnico</label>
+                        <input type="text" id="technician" name="technician" placeholder="Nombre del técnico" required>
+                    </div>
+                </section>
+
+                <!-- Section B: Estanques -->
+                <section class="card optional-section" id="section-lakes">
+                    <div class="optional-section-header">
+                        <h3>B. Estanques</h3>
+                    </div>
+                    <div id="lakes-container">
+                        <!-- Lake blocks will be injected here -->
+                    </div>
+                    <button type="button" id="btn-add-lake" class="btn btn-outline btn-add-inline">+ Agregar Estanque</button>
+                </section>
+
+                <!-- Section C: Recomendaciones Generales -->
+                <section class="card">
+                    <h3>C. Recomendaciones Generales</h3>
+                    <div class="input-group">
+                        <textarea id="recommendations" name="recommendations" rows="6" placeholder="Ingrese recomendaciones generales..."></textarea>
+                    </div>
+                </section>
+
+                <!-- Section D: Acciones a Realizar -->
+                <section class="card">
+                    <h3>D. Acciones a Realizar</h3>
+                    <div class="input-group">
+                        <textarea id="actions" name="actions" rows="6" placeholder="Ingrese acciones a realizar..."></textarea>
+                    </div>
+                </section>
+
+                <div class="form-actions sticky-bottom">
+                    <button type="submit" class="btn btn-primary btn-block">Generar Informe</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- REPORT VIEW -->
+        <div id="report-view" class="view hidden">
+            <!-- Print-only: Running header (repeats on every printed page) -->
+            <div class="print-running-header">
+                <img src="./assets/logo.png" alt="" class="print-rh-logo">
+                <span class="print-rh-title">INFORME TÉCNICO DE CAMPO</span>
+                <span class="print-rh-detail" id="print-rh-detail"></span>
+            </div>
+            <!-- Print-only: Running footer (repeats on every printed page) -->
+            <div class="print-running-footer">
+                <img src="./assets/footer.png" alt="" class="print-rf-img">
+            </div>
+
+            <div class="report-paper">
+                <table class="report-layout-table">
+                    <thead><tr><td><div class="print-header-space"></div></td></tr></thead>
+                    <tfoot><tr><td><div class="print-footer-space"></div></td></tr></tfoot>
+                    <tbody><tr><td class="report-body-cell">
+                        <!-- Compact Header Layout -->
+                        <div class="report-header-compact">
+                            <div class="report-header-logo">
+                                <img src="./assets/logo.png" alt="Castalia Artesanos Piscícolas">
+                            </div>
+                            <div class="report-header-info">
+                                <h1 class="report-title-compact">INFORME TÉCNICO DE CAMPO</h1>
+                                <div id="report-info-grid" class="info-grid-compact">
+                                    <div id="item-date" class="info-item"><span class="label">FECHA:</span> <span id="out-date" class="data-value"></span></div>
+                                    <div id="item-farm" class="info-item"><span class="label">GRANJA:</span> <span id="out-farm" class="data-value"></span></div>
+                                    <div id="item-municipality" class="info-item"><span class="label">MUNICIPIO:</span> <span id="out-municipality" class="data-value"></span></div>
+                                    <div id="item-owner" class="info-item"><span class="label">PROPIETARIO:</span> <span id="out-owner" class="data-value"></span></div>
+                                    <div id="item-attendedBy" class="info-item"><span class="label">ATENDIDO POR:</span> <span id="out-attendedBy" class="data-value"></span></div>
+                                    <div id="item-technician" class="info-item"><span class="label">TÉCNICOS:</span> <span id="out-technician" class="data-value"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="report-content">
+                            <div id="section-lakes-report" class="report-section">
+                                <h2 class="section-title">Resumen de Estanques</h2>
+                                <div id="out-lakes">
+                                    <!-- Lake cards will be injected here -->
+                                </div>
+                            </div>
+
+                            <div id="section-recommendations-report" class="report-section keep-together summary-card">
+                                <h2 class="section-title">Recomendaciones Generales</h2>
+                                <p id="out-recommendations" class="text-block"></p>
+                            </div>
+
+                            <div id="section-actions-report" class="report-section keep-together summary-card">
+                                <h2 class="section-title">Acciones a Realizar</h2>
+                                <p id="out-actions" class="text-block"></p>
+                            </div>
+                        </div>
+
+                        <!-- Footer Image (Large footer for last page in print) -->
+                        <div class="report-footer-screen">
+                            <img src="./assets/footer.png" alt="Castalia Artesanos Piscícolas" class="report-branding-img footer-img">
+                            <div class="footer-mask"></div>
+                        </div>
+                    </td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- Report Actions (Hidden in print) -->
+            <div class="report-actions sticky-bottom no-print">
+                <button type="button" id="btn-back" class="btn btn-outline">Editar</button>
+                <button type="button" id="btn-print" class="btn btn-primary">Descargar PDF</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Template for Lake Form Block -->
+    <template id="lake-form-template">
+        <div class="lake-block">
+            <div class="lake-header">
+                <h4>Estanque <span class="lake-index"></span></h4>
+                <button type="button" class="btn-remove btn-icon" aria-label="Eliminar estanque">&times;</button>
+            </div>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>Nombre o Número</label>
+                    <input type="text" name="lakeName[]" required>
+                </div>
+                <div class="input-group">
+                    <label>Área (m²)</label>
+                    <input type="number" step="0.01" name="lakeArea[]">
+                </div>
+                <div class="input-group">
+                    <label>Fecha de Siembra</label>
+                    <input type="date" name="lakeStockingDate[]">
+                </div>
+                <div class="input-group">
+                    <label>Cantidad de Peces</label>
+                    <input type="number" name="lakeFishQuantity[]">
+                </div>
+                <div class="input-group">
+                    <label>Peso Inicial del Ciclo (g)</label>
+                    <input type="number" step="0.01" name="lakeInitialWeight[]">
+                </div>
+                <div class="input-group">
+                    <label>Último Peso Muestreo ACTUAL (g)</label>
+                    <input type="number" step="0.01" name="lakeSampleWeight[]">
+                </div>
+                <div class="input-group full-width">
+                    <label>Consumo TOTAL Acumulado ACTUAL(kg)</label>
+                    <input type="number" step="0.01" name="lakeConsumption[]">
+                </div>
+                
+                <!-- Para Analiticas y Deltas Semanales -->
+                <details class="advanced-options full-width">
+                    <summary>Datos de Visita Anterior</summary>
+                    <div class="advanced-grid">
+                        <div class="input-group">
+                            <label>Fecha Visita Anterior</label>
+                            <input type="date" name="lakePrevDate[]">
+                        </div>
+                        <div class="input-group">
+                            <label>Peso Anterior (g)</label>
+                            <input type="number" step="0.01" name="lakePrevWeight[]">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Consumo Anterior (kg)</label>
+                            <input type="number" step="0.01" name="lakePrevConsumption[]">
+                        </div>
+                    </div>
+                </details>
+
+                <div class="input-group full-width">
+                    <label>Observaciones / Recomendaciones</label>
+                    <textarea name="lakeObservations[]" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="./js/app.js?v=91"></script>
+</body>
 </html>
